@@ -8,6 +8,9 @@ public static class CombatManager {
     public static InitiativeQueue turnQueue = new InitiativeQueue();
     public static List<AbstractCharacter> battleParticipants = new List<AbstractCharacter>();
 
+    public static AbstractAbility activePlayerAbility;
+    public static AbstractAbility activeEnemyAbility;
+
     public static void StartRound(){
 
         // At the start of a round, each fighter rolls for speed equal to the number of their actions.
@@ -17,6 +20,23 @@ public static class CombatManager {
                 int speed = fighter.speedMod + Random.Range(fighter.minSpeed, fighter.maxSpeed + 1);
                 turnQueue.Enqueue(speed, fighter);
             }
+        }
+    }
+
+    public static void NextCharacter(){
+        AbstractCharacter character = turnQueue.PopNextCharacter();
+        if (character.CHAR_FACTION == CharacterFaction.ENEMY){
+            // enemy AI processing
+        } else {
+            // player takes turn
+        }
+    }
+
+    public static void CombatEnds(bool playerVictorious){
+        if (playerVictorious) {
+            // Display rewards overlay
+        } else {
+            // If all agents are downed in combat, end the current run
         }
     }
 }

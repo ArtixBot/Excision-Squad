@@ -36,9 +36,10 @@ public abstract class AbstractAbility {
     public readonly AbilityType ABILITY_TYPE;
     public int ABILITY_CD;
 
-    public ListDictionary abilityQueue;     // An ability consists of a list of dice, played in order. Each of those dice may have a list of associated effects (on hit, on clash win, on clash lose, etc.)
+    public AbstractCharacter abilityOwner;
+    public List<AbstractDice> diceQueue;     // An ability consists of a list of dice, played in order.
     public List<AbilityTargetingModifier> targetingModifers = new List<AbilityTargetingModifier>();        // List of targeting condition modifiers (mostly for utility abilities but also a few AoE Melee or Ranged attacks)
-    public int cooldown;                    // When this ability is successfully activated, increase cooldown by ABILITY_COOLDOWN.
+    public int cooldown;                        // Current cooldown of this ability. When this ability is successfully activated, increase cooldown by ABILITY_COOLDOWN.
 
     public AbstractAbility(string ABILITY_ID, string ABILITY_NAME, AbilityType ABILITY_TYPE, List<AbilityTargetingModifier> targetingMods = null, int cooldown = 0){
         this.ABILITY_ID = ABILITY_ID;
@@ -60,11 +61,18 @@ public abstract class AbstractAbility {
     /// <summary>Return the list of units that can be targeted by this ability.</summary>
     public List<AbstractCharacter> GetTargetableUnits(){
         List<AbstractCharacter> targets = new List<AbstractCharacter>();
+        if (this.ABILITY_TYPE == AbilityType.MELEE){
+
+        } else if (this.ABILITY_TYPE == AbilityType.RANGED) { 
+
+        } else {        // utility ability
+
+        }
         return targets;
     }
 
     /// <summary>This function is run whenever an ability is selected, and returns the list of characters that can be targeted by this ability.</summary>
-    public List<AbstractCharacter> SelectAbility(){
+    public List<AbstractCharacter> ProcessSelection(){
         List<AbstractCharacter> targets = new List<AbstractCharacter>();
         try {
             this.CheckIfActivatable();
@@ -77,6 +85,18 @@ public abstract class AbstractAbility {
         return targets;
     }
 
+    /// <summary>This function is run once an ability is both selected and a target is selected, but BEFORE any dice are rolled.
+    public virtual void ProcessPreActivation(){}
+
     /// <summary>This function is run once an ability is both selected and a target is selected.
-    public abstract void ActivateAbility();
+    public void ProcessActivation(){
+        if (this.abilityOwner.CHAR_FACTION == CharacterFaction.ALLY){
+            CombatManager.activePlayerAbility = this;
+        } else {
+            CombatManager.activeEnemyAbility = this;
+        }
+    }
+
+    /// <summary>This function is run once an ability is both selected and a target is selected, but AFTER all dice are rolled.
+    public virtual void ProcessPostActivation(){}
 }

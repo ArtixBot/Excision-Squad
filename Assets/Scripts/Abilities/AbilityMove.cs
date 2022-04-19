@@ -11,8 +11,4 @@ public class AbilityMove : AbstractAbility {
         AbilityType.UTILITY,
         new List<AbilityTargetingModifier>{AbilityTargetingModifier.FRIENDLY_LANE}
     ){}
-
-    public override void ActivateAbility() {
-        return;
-    }
 }

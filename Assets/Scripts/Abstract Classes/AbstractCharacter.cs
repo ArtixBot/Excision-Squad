@@ -13,7 +13,7 @@ public abstract class AbstractCharacter {
     public int maxPoise, curPoise;
 
     public int actionsPerRound;
-    public int minSpeed, maxSpeed, speedMod;          // At the start of each round, for each action the user has, roll for initiative between [minSpeed, maxSpeed] + speedMod
+    public int minSpeed, maxSpeed, speedMod;          // At the start of each round, for each action the user has, roll for speed between [minSpeed, maxSpeed] + speedMod
     
     public List<AbstractAbility> abilities = new List<AbstractAbility>();
 }

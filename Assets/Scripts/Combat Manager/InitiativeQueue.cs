@@ -4,26 +4,32 @@ using UnityEngine;
 
 // Essentially a wrapper of a List<>, intended to "emulate" a priority queue.
 public class InitiativeQueue {
-    private readonly List<(int, AbstractCharacter)> turnList = new List<(int, AbstractCharacter)>();
+    private List<(int, AbstractCharacter)> turnList = new List<(int, AbstractCharacter)>();
 
     public void Clear(){
         turnList.Clear();
     }
 
-    public void Enqueue(int value, AbstractCharacter character){
+    public void Enqueue(int speed, AbstractCharacter character){
         int i = 0;
         while (i < turnList.Count){
-            if (value < turnList[i].Item1){
+            if (speed < turnList[i].Item1){
                 i++;
             }
         }
-        turnList.Insert(i, (value, character));
+        turnList.Insert(i, (speed, character));
+    }
+
+    public AbstractCharacter PopNextCharacter(){
+        if (turnList.Count == 0) { return null; }
+        AbstractCharacter character = turnList[0].Item2;
+        turnList.RemoveAt(0);
+        return character;
     }
 
     public AbstractCharacter GetNextCharacter(){
         if (turnList.Count == 0) { return null; }
         AbstractCharacter character = turnList[0].Item2;
-        turnList.RemoveAt(0);
         return character;
     }
 
