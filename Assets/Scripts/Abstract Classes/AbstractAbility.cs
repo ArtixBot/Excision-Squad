@@ -37,7 +37,7 @@ public abstract class AbstractAbility {
     public int ABILITY_CD;
 
     public AbstractCharacter abilityOwner;
-    public List<AbstractDice> diceQueue;     // An ability consists of a list of dice, played in order.
+    protected List<AbstractDice> diceQueue = new List<AbstractDice>();     // An ability consists of a list of dice, played in order.
     public List<AbilityTargetingModifier> targetingModifers = new List<AbilityTargetingModifier>();        // List of targeting condition modifiers (mostly for utility abilities but also a few AoE Melee or Ranged attacks)
     public int cooldown;                        // Current cooldown of this ability. When this ability is successfully activated, increase cooldown by ABILITY_COOLDOWN.
 
@@ -46,12 +46,26 @@ public abstract class AbstractAbility {
         this.ABILITY_NAME = ABILITY_NAME;
         this.ABILITY_TYPE = ABILITY_TYPE;
         this.ABILITY_CD = cooldown;
-        foreach (AbilityTargetingModifier mod in targetingMods){
-            this.targetingModifers.Add(mod);
+        if (!(targetingMods is null)){
+            foreach (AbilityTargetingModifier mod in targetingMods){
+                this.targetingModifers.Add(mod);
+            }
         }
     }
+
+    /// <summary>Returns a deep copy of this ability's diceQueue.</summary>
+    public List<AbstractDice> GetDice(){
+        List<AbstractDice> deepCopy = new List<AbstractDice>();
+        foreach(AbstractDice dice in this.diceQueue){
+            deepCopy.Add(dice.GetCopy());
+        }
+        return deepCopy;
+    }
     
-    /// <summary>Check if this ability can be activated. This function can be overwritten to add additional conditions to check for.</summary>
+    /// <summary>
+    /// Check if this ability can be activated. This function can be overwritten to add additional conditions to check for.<br/>
+    /// For players, this function is run whenever a player's turn starts. For enemies, run this at the start of a round.
+    /// </summary>
     public virtual void CheckIfActivatable(){
         if (this.cooldown > 0){
             throw new System.Exception("Cannot use this ability as it is on cooldown!");
@@ -59,7 +73,7 @@ public abstract class AbstractAbility {
     }
 
     /// <summary>Return the list of units that can be targeted by this ability.</summary>
-    public List<AbstractCharacter> GetTargetableUnits(){
+    private List<AbstractCharacter> GetTargetableUnits(){
         List<AbstractCharacter> targets = new List<AbstractCharacter>();
         if (this.ABILITY_TYPE == AbilityType.MELEE){
 
@@ -84,19 +98,4 @@ public abstract class AbstractAbility {
         }
         return targets;
     }
-
-    /// <summary>This function is run once an ability is both selected and a target is selected, but BEFORE any dice are rolled.
-    public virtual void ProcessPreActivation(){}
-
-    /// <summary>This function is run once an ability is both selected and a target is selected.
-    public void ProcessActivation(){
-        if (this.abilityOwner.CHAR_FACTION == CharacterFaction.ALLY){
-            CombatManager.activePlayerAbility = this;
-        } else {
-            CombatManager.activeEnemyAbility = this;
-        }
-    }
-
-    /// <summary>This function is run once an ability is both selected and a target is selected, but AFTER all dice are rolled.
-    public virtual void ProcessPostActivation(){}
 }

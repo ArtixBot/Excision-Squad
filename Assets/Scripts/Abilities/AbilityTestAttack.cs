@@ -9,5 +9,8 @@ public class AbilityTestAttack : AbstractAbility {
         ID,
         "Test Attack",
         AbilityType.MELEE
-    ){}
+    ){
+        this.diceQueue.Add(new DiceAttack(2, 5));
+        this.diceQueue.Add(new DiceAttack(3, 6));
+    }
 }
