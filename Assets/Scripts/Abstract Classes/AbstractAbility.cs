@@ -57,7 +57,9 @@ public abstract class AbstractAbility {
     public List<AbstractDice> GetDice(){
         List<AbstractDice> deepCopy = new List<AbstractDice>();
         foreach(AbstractDice dice in this.diceQueue){
-            deepCopy.Add(dice.GetCopy());
+            AbstractDice newDiceCopy = dice.GetCopy();
+            newDiceCopy.diceOwner = this.abilityOwner;
+            deepCopy.Add(newDiceCopy);
         }
         return deepCopy;
     }

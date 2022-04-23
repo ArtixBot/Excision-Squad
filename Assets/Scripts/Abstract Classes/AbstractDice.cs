@@ -12,19 +12,15 @@ public abstract class AbstractDice {
     protected int minValue;
     protected int maxValue;
 
-    // Roll the dice with a range from [minValue + minValueMod, maxValue + maxValueMod].
-    public int Roll(int minValueMod = 0, int maxValueMod = 0){
-        int minThreshold = this.minValue + minValueMod;
-        int maxThreshold = this.maxValue + maxValueMod;
-        if (minThreshold > maxThreshold){           // If the max threshold is < the min threshold after modifier calculations, swap the min/max threshold.
-            int tmp = maxThreshold;
-            maxThreshold = minThreshold;
-            minThreshold = tmp;
-        }
-        return Mathf.Max(0, Random.Range(minThreshold, maxThreshold + 1));    // roll cannot be negative
-    }
+    /// <summary> Roll dice with a range from [minValue + minValueMod, maxValue + maxValueMod].
+    /// This function automatically adds relevant dice type modifiers (e.g. if rolling an attackDice, automatically also adds owner.attackRollMinMod and owner.attackRollMaxMod).</summary>.
+    public abstract int Roll(int minValueMod = 0, int maxValueMod = 0);
 
     public abstract AbstractDice GetCopy();
+
+    public new DiceType GetType(){
+        return this.diceType;
+    }
 }
 
 public class DiceAttack : AbstractDice {
@@ -33,6 +29,18 @@ public class DiceAttack : AbstractDice {
         this.minValue = minValue;
         this.maxValue = maxValue;
         this.diceMods = diceMods;
+    }
+
+    public override int Roll(int minValueMod = 0, int maxValueMod = 0){
+                                                                    // null check
+        int minThreshold = this.minValue + minValueMod + (this.diceOwner?.attackRollMinMod ?? 0) + (this.diceOwner?.allRollMinMod ?? 0);
+        int maxThreshold = this.maxValue + maxValueMod + (this.diceOwner?.attackRollMaxMod ?? 0) + (this.diceOwner?.allRollMaxMod ?? 0);
+        if (minThreshold > maxThreshold){           // If the max threshold is < the min threshold after modifier calculations, swap the min/max threshold.
+            int tmp = maxThreshold;
+            maxThreshold = minThreshold;
+            minThreshold = tmp;
+        }
+        return Mathf.Max(0, Random.Range(minThreshold, maxThreshold + 1));    // roll cannot be negative
     }
 
     public override AbstractDice GetCopy(){
@@ -47,6 +55,17 @@ public class DiceBlock : AbstractDice {
         this.maxValue = maxValue;
         this.diceMods = diceMods;
     }
+
+    public override int Roll(int minValueMod = 0, int maxValueMod = 0){
+        int minThreshold = this.minValue + minValueMod + (this.diceOwner?.blockRollMinMod ?? 0) + (this.diceOwner?.allRollMinMod ?? 0);
+        int maxThreshold = this.maxValue + maxValueMod + (this.diceOwner?.blockRollMaxMod ?? 0) + (this.diceOwner?.allRollMaxMod ?? 0);
+        if (minThreshold > maxThreshold){           // If the max threshold is < the min threshold after modifier calculations, swap the min/max threshold.
+            int tmp = maxThreshold;
+            maxThreshold = minThreshold;
+            minThreshold = tmp;
+        }
+        return Mathf.Max(0, Random.Range(minThreshold, maxThreshold + 1));    // roll cannot be negative
+    }
     
     public override AbstractDice GetCopy(){
         return new DiceBlock(this.minValue, this.maxValue, this.diceMods);
@@ -59,6 +78,17 @@ public class DiceEvade : AbstractDice {
         this.minValue = minValue;
         this.maxValue = maxValue;
         this.diceMods = diceMods;
+    }
+
+    public override int Roll(int minValueMod = 0, int maxValueMod = 0){
+        int minThreshold = this.minValue + minValueMod + (this.diceOwner?.evadeRollMinMod ?? 0) + (this.diceOwner?.allRollMinMod ?? 0);
+        int maxThreshold = this.maxValue + maxValueMod + (this.diceOwner?.evadeRollMaxMod ?? 0) + (this.diceOwner?.allRollMaxMod ?? 0);
+        if (minThreshold > maxThreshold){           // If the max threshold is < the min threshold after modifier calculations, swap the min/max threshold.
+            int tmp = maxThreshold;
+            maxThreshold = minThreshold;
+            minThreshold = tmp;
+        }
+        return Mathf.Max(0, Random.Range(minThreshold, maxThreshold + 1));    // roll cannot be negative
     }
 
     public override AbstractDice GetCopy(){

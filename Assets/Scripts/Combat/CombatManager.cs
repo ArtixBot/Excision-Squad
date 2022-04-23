@@ -78,20 +78,80 @@ public static class CombatManager {
 
     /// <summary>Given two dice, roll them and then return the winning dice as well as the value that dice rolled.</summary>.
     private static (AbstractDice, int) ResolveClash(AbstractDice a, AbstractDice b){
-        return (a, 0);
+        int aVal = a.Roll(), bVal = b.Roll();
+
+        if (aVal == bVal){ return (null, 0); }      // Ties always have no winner
+
+        if (a.GetType() == DiceType.ATTACK && b.GetType() == DiceType.BLOCK || 
+            a.GetType() == DiceType.BLOCK && b.GetType() == DiceType.ATTACK){
+            // Mitigation scenario (Attack v. Block)
+            // Mitigation scenario: the higher roll wins but its final value is reduced by the smaller roll.
+            return (aVal > bVal) ? (a, aVal - bVal) : (b, bVal - aVal);        
+        } else {
+            // All-or-nothing scenario (Attack v. Evade, Attack v. Attack, Evade v. Evade, Block v. Evade, Block v. Block).
+            // All-or-nothing scenarios: the higher roll wins and its final value is equal to the higher roll.
+            return (aVal > bVal) ? (a, aVal) : (b, bVal);
+        }
     }
 
     /// <summary>This function will automatically process the active player and active enemy ability, and then returns a list of the resulting combat results (to be sent to CombatRender)</summary>
     public static void ResolveCombat(){
         List<AbstractDice> pDiceQueue = activePlayerAbility.GetDice(), eDiceQueue = activeEnemyAbility.GetDice();
+
+        // HANDLE CLASHES
         if (CheckForClash()){
-            // TODO: Run OnClash events here
             while (pDiceQueue.Count > 0 && eDiceQueue.Count > 0){
                 AbstractDice pDice = pDiceQueue[0], eDice = eDiceQueue[0];
-                int pDiceVale = pDice.Roll(), eDiceValue = eDice.Roll();
+                // TODO: Run OnClash events for pDice and eDice.
+                (AbstractDice, int) clashResult = CombatManager.ResolveClash(pDice, eDice);
+                if (clashResult.Item1 != null){
+                    // TODO: Add OnClashWin/OnClashLose events for winner dice/loser dice
+                    AbstractDice winner = clashResult.Item1;
+                    switch (winner.GetType()){
+                        case DiceType.ATTACK:
+                            // add damage action to combat queue
+                            break;
+                        case DiceType.BLOCK:
+                            // add poise damage action to combat queue
+                            break;
+                        case DiceType.EVADE:
+                            // add recover poise action to combat queue; if against an attack, add the dice back to the queue
+                            break;
+                    }
+                }
+                
                 pDiceQueue.RemoveAt(0);
                 eDiceQueue.RemoveAt(0);
             }
+        }
+        // HANDLE ONE-SIDED ATTACKS.
+        while (pDiceQueue.Count > 0){
+            AbstractDice pDice = pDiceQueue[0];
+            int roll = pDice.Roll();
+            switch (pDice.GetType()){
+                case DiceType.ATTACK:
+                    // add damage action to combat queue
+                    break;
+                case DiceType.BLOCK:
+                case DiceType.EVADE:
+                    // for now, no effect for a one-sided block/evade
+                    break;
+            }
+            pDiceQueue.RemoveAt(0);
+        }
+        while (eDiceQueue.Count > 0){
+            AbstractDice eDice = eDiceQueue[0];
+            int roll = eDice.Roll();
+            switch (eDice.GetType()){
+                case DiceType.ATTACK:
+                    // add damage action to combat queue
+                    break;
+                case DiceType.BLOCK:
+                case DiceType.EVADE:
+                    // for now, no effect for a one-sided block/evade
+                    break;
+            }
+            eDiceQueue.RemoveAt(0);
         }
         
         CombatManager.activePlayerAbility = null;
