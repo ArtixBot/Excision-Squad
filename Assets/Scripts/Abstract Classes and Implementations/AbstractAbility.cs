@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -35,10 +36,11 @@ public abstract class AbstractAbility {
     public readonly string      ABILITY_NAME;
     public readonly AbilityType ABILITY_TYPE;
     public int ABILITY_CD;
+    public readonly bool isAoE;
 
-    public AbstractCharacter abilityOwner;
     protected List<AbstractDice> diceQueue = new List<AbstractDice>();     // An ability consists of a list of dice, played in order.
-    public List<AbilityTargetingModifier> targetingModifers = new List<AbilityTargetingModifier>();        // List of targeting condition modifiers (mostly for utility abilities but also a few AoE Melee or Ranged attacks)
+    public AbstractCharacter abilityOwner;
+    public HashSet<AbilityTargetingModifier> targetingModifers = new HashSet<AbilityTargetingModifier>();        // List of targeting condition modifiers (mostly for utility abilities but also a few AoE Melee or Ranged attacks)
     public int cooldown;                        // Current cooldown of this ability. When this ability is successfully activated, increase cooldown by ABILITY_COOLDOWN.
 
     public AbstractAbility(string ABILITY_ID, string ABILITY_NAME, AbilityType ABILITY_TYPE, List<AbilityTargetingModifier> targetingMods = null, int cooldown = 0){
@@ -51,6 +53,8 @@ public abstract class AbstractAbility {
                 this.targetingModifers.Add(mod);
             }
         }
+        AbilityTargetingModifier[] aoeMods = {AbilityTargetingModifier.ALL_ENEMIES, AbilityTargetingModifier.ALL_ALLIES, AbilityTargetingModifier.ENEMY_LANE, AbilityTargetingModifier.FRIENDLY_LANE, AbilityTargetingModifier.EVERYONE};
+        this.isAoE = this.targetingModifers.Overlaps(aoeMods);
     }
 
     /// <summary>Returns a deep copy of this ability's diceQueue.</summary>

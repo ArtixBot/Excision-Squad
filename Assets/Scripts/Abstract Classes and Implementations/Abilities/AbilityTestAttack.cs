@@ -12,5 +12,9 @@ public class AbilityTestAttack : AbstractAbility {
     ){
         this.diceQueue.Add(new DiceAttack(2, 5));
         this.diceQueue.Add(new DiceAttack(3, 6));
+        this.diceQueue.Add(new DiceAttack(3, 6));
+        this.diceQueue.Add(new DiceAttack(3, 6));
+        this.diceQueue.Add(new DiceAttack(3, 6));
+        this.diceQueue.Add(new DiceAttack(3, 6));
     }
 }
