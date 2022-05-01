@@ -7,7 +7,9 @@ public class CombatRender : MonoBehaviour
     public Queue<IEnumerator> animationQueue = new Queue<IEnumerator>();
 
     void Start() {
-        CombatManager.StartCombat(new List<AbstractCharacter>());
+        List<AbstractCharacter> testData = new List<AbstractCharacter>();
+        testData.Add(new CharacterDeckard());
+        CombatManager.StartCombat(testData);
         // CombatManager.activePlayerAbility = new AbilityTestAttack();
         // CombatManager.ResolveCombat();
 

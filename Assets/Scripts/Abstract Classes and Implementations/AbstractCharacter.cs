@@ -27,7 +27,7 @@ public abstract class AbstractCharacter {
     public int damageTakenAddMod = 0;
     public float damageTakenMultMod = 1.0f;
 
-    public List<AbstractAbility> abilities = new List<AbstractAbility>();
+    public HashSet<AbstractAbility> abilities = new HashSet<AbstractAbility>();
 
     public AbstractCharacter(string ID, string NAME, CharacterFaction FACTION, int maxHP, int maxPoise, int actionsPerRound, int minSpd, int maxSpd){
         this.CHAR_ID = ID;
@@ -44,6 +44,15 @@ public abstract class AbstractCharacter {
 
     public bool HasActionsRemaining(){
         return CombatManager.turnQueue.ContainsCharacter(this);
+    }
+
+    public void LearnAbility(AbstractAbility ability){
+        this.abilities.Add(ability);
+        ability.abilityOwner = this;
+    }
+
+    public void UnlearnAbility(AbstractAbility ability){
+        this.abilities.Remove(ability);
     }
 }
 

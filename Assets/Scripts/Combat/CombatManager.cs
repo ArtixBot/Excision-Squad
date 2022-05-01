@@ -22,6 +22,14 @@ public static class CombatManager {
         CombatManager.StartRound();
     }
 
+    public static void EndCombat(bool playerVictorious){
+        if (playerVictorious) {
+            // Display rewards overlay
+        } else {
+            // If all agents are downed in combat, end the current run
+        }
+    }
+
     public static void StartRound(){
         // At the start of a round, process start-of-round status effects, then each fighter rolls for speed equal to the number of their actions.
         // TODO: Because of how InitiatveQueue works, have enemies roll for speed first and then players (so that in the case of a speed tie, the player always gets to go first.)
@@ -39,15 +47,6 @@ public static class CombatManager {
             // enemy AI processing
         } else {
             // player takes turn
-        }
-    }
-
-
-    public static void EndCombat(bool playerVictorious){
-        if (playerVictorious) {
-            // Display rewards overlay
-        } else {
-            // If all agents are downed in combat, end the current run
         }
     }
 
@@ -97,16 +96,16 @@ public static class CombatManager {
     }
 
     /// <summary>This function will automatically process the active player and active enemy ability, and then returns a list of the resulting combat results (to be sent to CombatRender)</summary>
-    public static void ResolveCombat(AbstractCharacter target){
+    public static void ResolveCombat(AbstractCharacter attacker, AbstractCharacter target, AbstractAbility attackerAbility, AbstractAbility defenderAbility){
 
         // null checks
-        List<AbstractDice> pDiceQueue = activePlayerAbility?.GetDice() ?? new List<AbstractDice>{};
-        List<AbstractDice> eDiceQueue = activeEnemyAbility?.GetDice() ?? new List<AbstractDice>{};
+        List<AbstractDice> atkDiceQueue = attackerAbility?.GetDice() ?? new List<AbstractDice>{};
+        List<AbstractDice> defDiceQueue = defenderAbility?.GetDice() ?? new List<AbstractDice>{};
 
         // HANDLE CLASHES
         if (CheckForClash()){
-            while (pDiceQueue.Count > 0 && eDiceQueue.Count > 0){
-                AbstractDice pDice = pDiceQueue[0], eDice = eDiceQueue[0];
+            while (atkDiceQueue.Count > 0 && defDiceQueue.Count > 0){
+                AbstractDice pDice = atkDiceQueue[0], eDice = defDiceQueue[0];
                 // TODO: Run OnClash events for pDice and eDice.
                 (AbstractDice, int, AbstractDice) clashResult = CombatManager.ResolveClash(pDice, eDice);
                 if (clashResult.Item1 != null){
@@ -126,45 +125,60 @@ public static class CombatManager {
                             // When evading an attack, evade dice gets to be rerolled.
                             if (loser.GetType() == DiceType.ATTACK){
                                 if (winner == pDice){
-                                    pDiceQueue.Add(pDice);
+                                    atkDiceQueue.Add(pDice);
                                 } else {
-                                    eDiceQueue.Add(eDice);
+                                    defDiceQueue.Add(eDice);
                                 }
                             }
                             break;
                     }
                 }
                 
-                pDiceQueue.RemoveAt(0);
-                eDiceQueue.RemoveAt(0);
+                atkDiceQueue.RemoveAt(0);
+                defDiceQueue.RemoveAt(0);
             }
-        }
-        // HANDLE ONE-SIDED ATTACKS.
-        while (pDiceQueue.Count > 0){
-            AbstractDice pDice = pDiceQueue[0];
-            int roll = pDice.Roll();
-            switch (pDice.GetType()){
-                case DiceType.ATTACK:
-                    combatActionQueue.Add(new CombatActionAttack(pDice.diceOwner, target, roll));
-                    break;
-                case DiceType.BLOCK:        // for now, no effect on a one-sided block/evade
-                case DiceType.EVADE:
-                    break;
+            // Handle any leftover dice from the clash
+            while (atkDiceQueue.Count > 0){
+                AbstractDice pDice = atkDiceQueue[0];
+                int roll = pDice.Roll();
+                switch (pDice.GetType()){
+                    case DiceType.ATTACK:
+                        combatActionQueue.Add(new CombatActionAttack(pDice.diceOwner, target, roll));
+                        break;
+                    case DiceType.BLOCK:        // for now, no effect on a one-sided block/evade
+                    case DiceType.EVADE:
+                        break;
+                }
+                atkDiceQueue.RemoveAt(0);
             }
-            pDiceQueue.RemoveAt(0);
-        }
-        while (eDiceQueue.Count > 0){
-            AbstractDice eDice = eDiceQueue[0];
-            int roll = eDice.Roll();
-            switch (eDice.GetType()){
-                case DiceType.ATTACK:
-                    combatActionQueue.Add(new CombatActionAttack(eDice.diceOwner, target, roll));
-                    break;
-                case DiceType.BLOCK:
-                case DiceType.EVADE:
-                    break;
+            while (defDiceQueue.Count > 0){
+                AbstractDice eDice = defDiceQueue[0];
+                int roll = eDice.Roll();
+                switch (eDice.GetType()){
+                    case DiceType.ATTACK:
+                        combatActionQueue.Add(new CombatActionAttack(eDice.diceOwner, target, roll));
+                        break;
+                    case DiceType.BLOCK:
+                    case DiceType.EVADE:
+                        break;
+                }
+                defDiceQueue.RemoveAt(0);
             }
-            eDiceQueue.RemoveAt(0);
+        } else {
+            // ONE-SIDED attack; just roll the attacker dice
+            while (atkDiceQueue.Count > 0){
+                AbstractDice pDice = atkDiceQueue[0];
+                int roll = pDice.Roll();
+                switch (pDice.GetType()){
+                    case DiceType.ATTACK:
+                        combatActionQueue.Add(new CombatActionAttack(pDice.diceOwner, target, roll));
+                        break;
+                    case DiceType.BLOCK:
+                    case DiceType.EVADE:
+                        break;
+                }
+                atkDiceQueue.RemoveAt(0);
+            }
         }
         
         CombatManager.activePlayerAbility = null;

@@ -14,8 +14,12 @@ public class CombatActionAttack : AbstractCombatAction {
 
     public override void Resolve(){
         this.victim.curHP -= this.damageToDeal;
+        this.victim.curPoise -= this.damageToDeal;
         if (this.victim.curHP <= 0){
             // TODO: die
+        }
+        if (this.victim.curPoise <= 0){
+            // TODO: stagger
         }
     }
 }

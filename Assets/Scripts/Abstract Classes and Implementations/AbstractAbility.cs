@@ -72,10 +72,9 @@ public abstract class AbstractAbility {
     /// Check if this ability can be activated. This function can be overwritten to add additional conditions to check for.<br/>
     /// For players, this function is run whenever a player's turn starts. For enemies, run this at the start of a round.
     /// </summary>
-    public virtual void CheckIfActivatable(){
-        if (this.cooldown > 0){
-            throw new System.Exception("Cannot use this ability as it is on cooldown!");
-        }
+    public virtual bool CheckIfActivatable(){
+        if (this.cooldown > 0){ return false; }
+        return true;
     }
 
     /// <summary>Return the list of units that can be targeted by this ability.</summary>
