@@ -65,15 +65,15 @@ public static class CombatManager {
 
     /// <summary>Invoked by ResolveCombat. Runs through multiple conditions to see if a clash should be initiated when ResolveCombat is run.</summary>
     private static bool CheckForClash(){
-        AbstractAbility playerAbility = CombatManager.activePlayerAbility;
-        AbstractAbility enemyAbility = CombatManager.activeEnemyAbility;
+        // AbstractAbility playerAbility = CombatManager.activePlayerAbility;
+        // AbstractAbility enemyAbility = CombatManager.activeEnemyAbility;
 
-        // No clash if either the player/enemy ability isn't active
-        if (playerAbility == null || enemyAbility == null) return false;
-        // No clash if either the active player/enemy ability is a utility ability
-        if (playerAbility.ABILITY_TYPE == AbilityType.UTILITY || enemyAbility.ABILITY_TYPE == AbilityType.UTILITY) return false;
-        // No clash if either the active player/enemy ability is an AoE attack
-        if (playerAbility.isAoE || enemyAbility.isAoE) return false;
+        // // No clash if either the player/enemy ability isn't active
+        // if (playerAbility == null || enemyAbility == null) return false;
+        // // No clash if either the active player/enemy ability is a utility ability
+        // if (playerAbility.ABILITY_TYPE == AbilityType.UTILITY || enemyAbility.ABILITY_TYPE == AbilityType.UTILITY) return false;
+        // // No clash if either the active player/enemy ability is an AoE attack
+        // if (playerAbility.isAoE || enemyAbility.isAoE) return false;
         return true;
     }
 
@@ -98,91 +98,91 @@ public static class CombatManager {
     /// <summary>This function will automatically process the active player and active enemy ability, and then returns a list of the resulting combat results (to be sent to CombatRender)</summary>
     public static void ResolveCombat(AbstractCharacter attacker, AbstractCharacter target, AbstractAbility attackerAbility, AbstractAbility defenderAbility){
 
-        // null checks
-        List<AbstractDice> atkDiceQueue = attackerAbility?.GetDice() ?? new List<AbstractDice>{};
-        List<AbstractDice> defDiceQueue = defenderAbility?.GetDice() ?? new List<AbstractDice>{};
+        // // null checks
+        // List<AbstractDice> atkDiceQueue = attackerAbility?.GetDice() ?? new List<AbstractDice>{};
+        // List<AbstractDice> defDiceQueue = defenderAbility?.GetDice() ?? new List<AbstractDice>{};
 
-        // HANDLE CLASHES
-        if (CheckForClash()){
-            while (atkDiceQueue.Count > 0 && defDiceQueue.Count > 0){
-                AbstractDice pDice = atkDiceQueue[0], eDice = defDiceQueue[0];
-                // TODO: Run OnClash events for pDice and eDice.
-                (AbstractDice, int, AbstractDice) clashResult = CombatManager.ResolveClash(pDice, eDice);
-                if (clashResult.Item1 != null){
-                    // TODO: Add OnClashWin/OnClashLose events for winner dice/loser dice
-                    AbstractDice winner = clashResult.Item1;
-                    AbstractDice loser = clashResult.Item3;
-                    switch (winner.GetType()){
-                        case DiceType.ATTACK:
-                            combatActionQueue.Add(new CombatActionAttack(winner.diceOwner, loser.diceOwner, clashResult.Item2));
-                            break;
-                        case DiceType.BLOCK:
-                            combatActionQueue.Add(new CombatActionBlock(loser.diceOwner, clashResult.Item2));
-                            break;
-                        case DiceType.EVADE:
-                            combatActionQueue.Add(new CombatActionEvade(winner.diceOwner, clashResult.Item2));
+        // // HANDLE CLASHES
+        // if (CheckForClash()){
+        //     while (atkDiceQueue.Count > 0 && defDiceQueue.Count > 0){
+        //         AbstractDice pDice = atkDiceQueue[0], eDice = defDiceQueue[0];
+        //         // TODO: Run OnClash events for pDice and eDice.
+        //         (AbstractDice, int, AbstractDice) clashResult = CombatManager.ResolveClash(pDice, eDice);
+        //         if (clashResult.Item1 != null){
+        //             // TODO: Add OnClashWin/OnClashLose events for winner dice/loser dice
+        //             AbstractDice winner = clashResult.Item1;
+        //             AbstractDice loser = clashResult.Item3;
+        //             switch (winner.GetType()){
+        //                 case DiceType.ATTACK:
+        //                     combatActionQueue.Add(new CombatActionAttack(winner.diceOwner, loser.diceOwner, clashResult.Item2));
+        //                     break;
+        //                 case DiceType.BLOCK:
+        //                     combatActionQueue.Add(new CombatActionBlock(loser.diceOwner, clashResult.Item2));
+        //                     break;
+        //                 case DiceType.EVADE:
+        //                     combatActionQueue.Add(new CombatActionEvade(winner.diceOwner, clashResult.Item2));
                             
-                            // When evading an attack, evade dice gets to be rerolled.
-                            if (loser.GetType() == DiceType.ATTACK){
-                                if (winner == pDice){
-                                    atkDiceQueue.Add(pDice);
-                                } else {
-                                    defDiceQueue.Add(eDice);
-                                }
-                            }
-                            break;
-                    }
-                }
+        //                     // When evading an attack, evade dice gets to be rerolled.
+        //                     if (loser.GetType() == DiceType.ATTACK){
+        //                         if (winner == pDice){
+        //                             atkDiceQueue.Add(pDice);
+        //                         } else {
+        //                             defDiceQueue.Add(eDice);
+        //                         }
+        //                     }
+        //                     break;
+        //             }
+        //         }
                 
-                atkDiceQueue.RemoveAt(0);
-                defDiceQueue.RemoveAt(0);
-            }
-            // Handle any leftover dice from the clash
-            while (atkDiceQueue.Count > 0){
-                AbstractDice pDice = atkDiceQueue[0];
-                int roll = pDice.Roll();
-                switch (pDice.GetType()){
-                    case DiceType.ATTACK:
-                        combatActionQueue.Add(new CombatActionAttack(pDice.diceOwner, target, roll));
-                        break;
-                    case DiceType.BLOCK:        // for now, no effect on a one-sided block/evade
-                    case DiceType.EVADE:
-                        break;
-                }
-                atkDiceQueue.RemoveAt(0);
-            }
-            while (defDiceQueue.Count > 0){
-                AbstractDice eDice = defDiceQueue[0];
-                int roll = eDice.Roll();
-                switch (eDice.GetType()){
-                    case DiceType.ATTACK:
-                        combatActionQueue.Add(new CombatActionAttack(eDice.diceOwner, target, roll));
-                        break;
-                    case DiceType.BLOCK:
-                    case DiceType.EVADE:
-                        break;
-                }
-                defDiceQueue.RemoveAt(0);
-            }
-        } else {
-            // ONE-SIDED attack; just roll the attacker dice
-            while (atkDiceQueue.Count > 0){
-                AbstractDice pDice = atkDiceQueue[0];
-                int roll = pDice.Roll();
-                switch (pDice.GetType()){
-                    case DiceType.ATTACK:
-                        combatActionQueue.Add(new CombatActionAttack(pDice.diceOwner, target, roll));
-                        break;
-                    case DiceType.BLOCK:
-                    case DiceType.EVADE:
-                        break;
-                }
-                atkDiceQueue.RemoveAt(0);
-            }
-        }
+        //         atkDiceQueue.RemoveAt(0);
+        //         defDiceQueue.RemoveAt(0);
+        //     }
+        //     // Handle any leftover dice from the clash
+        //     while (atkDiceQueue.Count > 0){
+        //         AbstractDice pDice = atkDiceQueue[0];
+        //         int roll = pDice.Roll();
+        //         switch (pDice.GetType()){
+        //             case DiceType.ATTACK:
+        //                 combatActionQueue.Add(new CombatActionAttack(pDice.diceOwner, target, roll));
+        //                 break;
+        //             case DiceType.BLOCK:        // for now, no effect on a one-sided block/evade
+        //             case DiceType.EVADE:
+        //                 break;
+        //         }
+        //         atkDiceQueue.RemoveAt(0);
+        //     }
+        //     while (defDiceQueue.Count > 0){
+        //         AbstractDice eDice = defDiceQueue[0];
+        //         int roll = eDice.Roll();
+        //         switch (eDice.GetType()){
+        //             case DiceType.ATTACK:
+        //                 combatActionQueue.Add(new CombatActionAttack(eDice.diceOwner, target, roll));
+        //                 break;
+        //             case DiceType.BLOCK:
+        //             case DiceType.EVADE:
+        //                 break;
+        //         }
+        //         defDiceQueue.RemoveAt(0);
+        //     }
+        // } else {
+        //     // ONE-SIDED attack; just roll the attacker dice
+        //     while (atkDiceQueue.Count > 0){
+        //         AbstractDice pDice = atkDiceQueue[0];
+        //         int roll = pDice.Roll();
+        //         switch (pDice.GetType()){
+        //             case DiceType.ATTACK:
+        //                 combatActionQueue.Add(new CombatActionAttack(pDice.diceOwner, target, roll));
+        //                 break;
+        //             case DiceType.BLOCK:
+        //             case DiceType.EVADE:
+        //                 break;
+        //         }
+        //         atkDiceQueue.RemoveAt(0);
+        //     }
+        // }
         
-        CombatManager.activePlayerAbility = null;
-        CombatManager.activeEnemyAbility = null;
-        return;
+        // CombatManager.activePlayerAbility = null;
+        // CombatManager.activeEnemyAbility = null;
+        // return;
     }
 }
