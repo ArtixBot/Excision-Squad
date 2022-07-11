@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public enum CharacterFaction {ALLY, ENEMY};
+public enum CharacterFaction {PLAYER_FACTION, NEUTRAL_FACTION, ENEMY_FACTION};
 
 public abstract class AbstractCharacter {
     public string CHAR_ID;
@@ -15,6 +15,7 @@ public abstract class AbstractCharacter {
 
     public int actionsPerRound;
     public int minSpd, maxSpd;          // At the start of each round, for each action the user has, roll for speed between [minSpeed, maxSpeed] + speedMod
+    public int curLane;                 // The current lane that this character is in. Ranges from [0, 5]
     
     public int speedMod = 0;    // Modifier to the speed value of the user
     public int allRollMinMod = 0, allRollMaxMod = 0;        // Modifier to the min/max roll range for ALL dice
@@ -55,7 +56,7 @@ public abstract class AbstractCharacter {
 
     public void LearnAbility(AbstractAbility ability){
         this.abilities.Add(ability);
-        // ability.abilityOwner = this;
+        ability.abilityOwner = this;
     }
 
     public void UnlearnAbility(AbstractAbility ability){
@@ -71,7 +72,7 @@ public class CharacterDeckard : AbstractCharacter{
 
     public CharacterDeckard() : base(CharacterDeckard.ID,
                                     "Deckard",
-                                    CharacterFaction.ALLY,
+                                    CharacterFaction.PLAYER_FACTION,
                                     initialMaxHP,
                                     initialMaxPoise,
                                     initialMaxActions,

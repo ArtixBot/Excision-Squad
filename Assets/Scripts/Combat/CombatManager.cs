@@ -1,29 +1,48 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+
+/* Combat Order:
+ * Before Round Start (resolve all status effects)
+ * Round Start  (roll for initiative)
+ * Players/Enemies play their turns
+ * Round End
+*/
+public enum Team {PLAYER_TEAM, NEUTRAL_TEAM, ENEMY_TEAM};
 
 public static class CombatManager {
 
+    public static CombatRender combatRender;
+
+
+    // =========== COMBAT STATE VARIABLES ===========
     public static int round = 1;
     public static InitiativeQueue turnQueue = new InitiativeQueue();
-    public static List<AbstractCharacter> battleParticipants = new List<AbstractCharacter>();
     public static List<AbstractCombatAction> combatActionQueue = new List<AbstractCombatAction>();
 
-    public static AbstractAbility activePlayerAbility;
-    public static AbstractAbility activeEnemyAbility;
-
-    public static CombatRender combatRender;
+    // Tuple of (list of team members, team valor points, team type)
+    public static (List<AbstractCharacter>, int, Team) PLAYER_TEAM   = (new List<AbstractCharacter>(), 0, Team.PLAYER_TEAM);
+    public static (List<AbstractCharacter>, int, Team) NEUTRAL_TEAM  = (new List<AbstractCharacter>(), 0, Team.NEUTRAL_TEAM);
+    public static (List<AbstractCharacter>, int, Team) ENEMY_TEAM    = (new List<AbstractCharacter>(), 0, Team.ENEMY_TEAM);
+    public static readonly Dictionary<CharacterFaction, (List<AbstractCharacter>, int, Team)> mapFactionToTeam = new Dictionary<CharacterFaction, (List<AbstractCharacter>, int, Team)>{
+        {CharacterFaction.PLAYER_FACTION, PLAYER_TEAM},
+        {CharacterFaction.NEUTRAL_FACTION, NEUTRAL_TEAM},
+        {CharacterFaction.ENEMY_FACTION, ENEMY_TEAM}
+    };
+    // ========= END COMBAT STATE VARIABLES ========
 
     public static void StartCombat(List<AbstractCharacter> fighters){
         combatRender = GameObject.FindObjectOfType<CombatRender>();
         CombatManager.round = 1;
-        CombatManager.battleParticipants = fighters;
-
+        foreach (AbstractCharacter fighter in fighters){
+            mapFactionToTeam[fighter.CHAR_FACTION].Item1.Add(fighter);
+        }
         CombatManager.StartRound();
     }
 
-    public static void EndCombat(bool playerVictorious){
-        if (playerVictorious) {
+    public static void EndCombat(bool victory){
+        if (victory) {
             // Display rewards overlay
         } else {
             // If all agents are downed in combat, end the current run
@@ -32,22 +51,31 @@ public static class CombatManager {
 
     public static void StartRound(){
         // At the start of a round, process start-of-round status effects, then each fighter rolls for speed equal to the number of their actions.
-        // TODO: Because of how InitiatveQueue works, have enemies roll for speed first and then players (so that in the case of a speed tie, the player always gets to go first.)
-        foreach (AbstractCharacter fighter in battleParticipants){
+        // On an initiative tie, players go first, then neutrals, then enemies.
+        foreach (AbstractCharacter fighter in ENEMY_TEAM.Item1.Concat(NEUTRAL_TEAM.Item1).Concat(PLAYER_TEAM.Item1).ToList()){
             for (int i = 0; i < fighter.actionsPerRound; i++){
                 int speed = fighter.speedMod + Random.Range(fighter.minSpd, fighter.maxSpd + 1);
                 turnQueue.Enqueue(speed, fighter);
             }
         }
+        CombatManager.NextCharacter();
     }
 
     public static void NextCharacter(){
         AbstractCharacter character = turnQueue.Pop();
-        if (character.CHAR_FACTION == CharacterFaction.ENEMY){
+        if (character.CHAR_FACTION == CharacterFaction.ENEMY_FACTION || character.CHAR_FACTION == CharacterFaction.NEUTRAL_FACTION){
             // enemy AI processing
         } else {
-            // player takes turn
+            // foreach (AbstractAbility ability in character.abilities){
+            //     ability.IsActivatable();
+            // }
         }
+    }
+    
+    public static List<AbstractCharacter> calculateEligibleTargets(AbstractAbility ability){
+        List<AbstractCharacter> targets = new List<AbstractCharacter>();
+        AbstractCharacter initiator = ability.abilityOwner;
+        return targets;
     }
 
     // public static void ProcessAbility(AbstractAbility ability, List<AbstractCharacter> targets){
@@ -63,17 +91,14 @@ public static class CombatManager {
     //     }
     // }
 
+    /// AoE abilities never can be clashed against, but this is here just for consistency.
+    private static bool CheckForClash(AbstractAbility initiator, List<AbstractCharacter> targets){ return false; }
     /// <summary>Invoked by ResolveCombat. Runs through multiple conditions to see if a clash should be initiated when ResolveCombat is run.</summary>
-    private static bool CheckForClash(){
-        // AbstractAbility playerAbility = CombatManager.activePlayerAbility;
-        // AbstractAbility enemyAbility = CombatManager.activeEnemyAbility;
-
-        // // No clash if either the player/enemy ability isn't active
-        // if (playerAbility == null || enemyAbility == null) return false;
-        // // No clash if either the active player/enemy ability is a utility ability
-        // if (playerAbility.ABILITY_TYPE == AbilityType.UTILITY || enemyAbility.ABILITY_TYPE == AbilityType.UTILITY) return false;
-        // // No clash if either the active player/enemy ability is an AoE attack
-        // if (playerAbility.isAoE || enemyAbility.isAoE) return false;
+    private static bool CheckForClash(AbstractAbility initiator, AbstractCharacter target){
+        if (initiator.isAoE || initiator.ABILITY_TYPE == AbilityType.UTILITY) return false;
+        
+        AbstractAbility targetIntent = target.currentIntent;
+        if (targetIntent == null || targetIntent.ABILITY_TYPE == AbilityType.UTILITY || targetIntent.isAoE) return false;
         return true;
     }
 

@@ -8,103 +8,81 @@ public enum AbilityType { MELEE, RANGED, UTILITY };
 
 /// <summary>Ability targeting types.</summary>
 public enum AbilityTargetingModifier {
-    /// <summary>This modifier only affects Utility abilities. This ability targets ALL allies in a lane.</summary>
-    FRIENDLY_LANE,
-    /// <summary>This modifier only affects Utility abilities. This ability can only target self.</summary>
-    SELF,
-    /// <summary>This modifier only affects Utility abilities. This ability can target ANY ally regardless of position.</summary>
-    TARGET_ALLY,
-    /// <summary>This modifier only affects Utility abilities. This ability can target ANY enemy regardless of position.</summary>
-    TARGET_ENEMY,
-    /// <summary>This modifier only affects Utility abilities. This ability targets all allies.</summary>
-    ALL_ALLIES,
-    /// <summary>Has no effect on Utility abilities.
-    /// If Reach is added as a condition, for melee abilities, allows them to target enemies regardless of their position.
-    /// For ranged abilities, allows them to be used in the front lane.</summary>
-    REACH,
-    /// <summary>This ability targets ALL enemies in a lane and CANNOT be clashed. Melee abilities are still restricted to only target enemies in the frontmost lane.</summary>
-    ENEMY_LANE,
-    /// <summary>This ability simultaneously targets all enemies and CANNOT be clashed. If added on a Melee or Ranged ability, overrides REACH and ENEMY_LANE.</summary>
-    ALL_ENEMIES,
-    /// <summary>This ability simultaneously targets all allies, self, and all enemies. If added on a Melee or Ranged ability, overrides REACH, ENEMY_LANE, and ALL_ENEMIES.</summary>
-    EVERYONE
+    /// <summary>This modifier removes enemies from the list of valid targets.</summary>
+    ONLY_TARGET_ALLIES,
+    /// <summary>This modifier removes allies from the list of valid targets.</summary>
+    ONLY_TARGET_ENEMIES,
+    /// <summary>Converts ability to AoE. Modifies targeting to affect ALL units in a specific lane within range.</summary>
+    AOE_SINGLE_LANE,
+    /// <summary>Converts ability to AoE. Modifies targeting to affect ALL units in range.</summary>
+    AOE_ALL_LANES,
 };
+
+public enum AbilityTags {
+    /// <summary>If this ability would clash when used to initiate an attack, bypass the clash.</summary>
+    SNEAKY
+}
 
 public abstract class AbstractAbility {
     
-    // public readonly string      BASE_ABILITY_ID;
-    // public readonly string      BASE_ABILITY_NAME;
-    // public readonly AbilityType BASE_ABILITY_TYPE;
-    // public readonly int BASE_CD;
-    // public readonly int BASE_MIN_RANGE;
-    // public readonly int BASE_MAX_RANGE;
-    // public readonly bool BASE_ABILITY_IS_AOE;
+    public readonly string      ABILITY_ID;
+    public readonly string      ABILITY_NAME;
+    public readonly AbilityType ABILITY_TYPE;
+    public readonly int         BASE_CD;
+    public readonly int         BASE_MIN_RANGE;
+    public readonly int         BASE_MAX_RANGE;
+    public readonly int         BASE_VALOR_COST;
+    public bool isAoE;
 
-    // protected List<AbstractDice> diceQueue = new List<AbstractDice>();     // An ability consists of a list of dice, played in order.
-    // public AbstractCharacter abilityOwner;
-    // public HashSet<AbilityTargetingModifier> targetingModifers = new HashSet<AbilityTargetingModifier>();        // List of targeting condition modifiers (mostly for utility abilities but also a few AoE Melee or Ranged attacks)
-    // public int cooldown;                        // Current cooldown of this ability. When this ability is successfully activated, increase cooldown by ABILITY_COOLDOWN.
+    // List of targeting condition modifiers (utility abilities, AoE Melee/Ranged attacks). Checking which units can be targeted by an ability is done by the CombatManager.
+    public HashSet<AbilityTargetingModifier> targetingModifers = new HashSet<AbilityTargetingModifier>();
+    protected List<AbstractDice> diceQueue = new List<AbstractDice>();     // An ability consists of a list of dice, played in order.
+    public AbstractCharacter abilityOwner;
+    public int curCooldown;     // Current cooldown of this ability. When this ability is successfully activated, increase cooldown by BASE_CD.
 
-    // public AbstractAbility(string ABILITY_ID, string ABILITY_NAME, AbilityType ABILITY_TYPE, int ABILITY_MIN_RANGE, int ABILITY_MAX_RANGE, List<AbilityTargetingModifier> targetingMods = null, int cooldown = 0){
-    //     this.BASE_ABILITY_ID = ABILITY_ID;
-    //     this.BASE_ABILITY_NAME = ABILITY_NAME;
-    //     this.BASE_ABILITY_TYPE = ABILITY_TYPE;
-    //     this.BASE_MIN_RANGE = ABILITY_MIN_RANGE;
-    //     this.BASE_MAX_RANGE = ABILITY_MAX_RANGE;
-    //     this.ABILITY_CD = cooldown;
-    //     if (!(targetingMods is null)){
-    //         foreach (AbilityTargetingModifier mod in targetingMods){
-    //             this.targetingModifers.Add(mod);
-    //         }
-    //     }
-    //     AbilityTargetingModifier[] aoeMods = {AbilityTargetingModifier.ALL_ENEMIES, AbilityTargetingModifier.ALL_ALLIES, AbilityTargetingModifier.ENEMY_LANE, AbilityTargetingModifier.FRIENDLY_LANE, AbilityTargetingModifier.EVERYONE};
-    //     this.isAoE = this.targetingModifers.Overlaps(aoeMods);
-    // }
 
-    // /// <summary>Returns a deep copy of this ability's diceQueue.</summary>
-    // public List<AbstractDice> GetDice(){
-    //     List<AbstractDice> deepCopy = new List<AbstractDice>();
-    //     foreach(AbstractDice dice in this.diceQueue){
-    //         AbstractDice newDiceCopy = dice.GetCopy();
-    //         newDiceCopy.diceOwner = this.abilityOwner;
-    //         deepCopy.Add(newDiceCopy);
-    //     }
-    //     return deepCopy;
-    // }
-    
-    // /// <summary>
-    // /// Check if this ability can be activated. This function can be overwritten to add additional conditions to check for.<br/>
-    // /// For players, this function is run whenever a player's turn starts. For enemies, run this at the start of a round.
-    // /// </summary>
-    // public virtual bool CheckIfActivatable(){
-    //     if (this.cooldown > 0){ return false; }
-    //     return true;
-    // }
+    public AbstractAbility(string ABILITY_ID, string ABILITY_NAME, AbilityType ABILITY_TYPE, int BASE_CD, int ABILITY_MIN_RANGE, int ABILITY_MAX_RANGE,
+                            int VALOR_COST = 0,
+                            List<AbilityTags> tags = null, 
+                            List<AbilityTargetingModifier> targetingMods = null){
+        this.ABILITY_ID = ABILITY_ID;
+        this.ABILITY_NAME = ABILITY_NAME;
+        this.ABILITY_TYPE = ABILITY_TYPE;
+        this.BASE_CD = BASE_CD;
+        this.BASE_MIN_RANGE = ABILITY_MIN_RANGE;
+        this.BASE_MAX_RANGE = ABILITY_MAX_RANGE;
+        this.BASE_VALOR_COST = VALOR_COST;
+        foreach (AbilityTargetingModifier mod in targetingMods){
+            this.targetingModifers.Add(mod);
+        }
+        AbilityTargetingModifier[] aoeMods = {AbilityTargetingModifier.AOE_ALL_LANES, AbilityTargetingModifier.AOE_SINGLE_LANE};
+        this.isAoE = this.targetingModifers.Overlaps(aoeMods);
+    }
 
-    // /// <summary>Return the list of units that can be targeted by this ability.</summary>
-    // private List<AbstractCharacter> GetTargetableUnits(){
-    //     List<AbstractCharacter> targets = new List<AbstractCharacter>();
-    //     if (this.ABILITY_TYPE == AbilityType.MELEE){
+    /// <summary>
+    /// Check if this ability can be activated. This function can be overwritten to add additional conditions to check for.<br/>
+    /// </summary>
+    public virtual bool IsActivatable(){
+        if (this.curCooldown > 0) { return false; }
+        if (CombatManager.mapFactionToTeam[this.abilityOwner.CHAR_FACTION].Item2 < this.BASE_VALOR_COST) { return false; }
+        return true;
+    }
 
-    //     } else if (this.ABILITY_TYPE == AbilityType.RANGED) { 
+    /// <summary>
+    /// Perform any on-use actions.
+    /// </summary>
+    public virtual void Use(){
 
-    //     } else {        // utility ability
+    }
 
-    //     }
-    //     return targets;
-    // }
-
-    // /// <summary>This function is run whenever an ability is selected, and returns the list of characters that can be targeted by this ability.</summary>
-    // public List<AbstractCharacter> ProcessSelection(){
-    //     List<AbstractCharacter> targets = new List<AbstractCharacter>();
-    //     try {
-    //         this.CheckIfActivatable();
-    //         targets = this.GetTargetableUnits();
-    //         if (targets.Count == 0) { throw new System.Exception("Cannot use this ability as there are no valid targets!"); }
-    //     } catch (System.Exception ex){
-    //         Debug.Log($"Cannot use this ability, reason: {ex.Message}");
-    //         return null;
-    //     }
-    //     return targets;
-    // }
+    /// <summary>Returns a deep copy of this ability's diceQueue.</summary>
+    public List<AbstractDice> GetDice(){
+        List<AbstractDice> deepCopy = new List<AbstractDice>();
+        foreach(AbstractDice dice in this.diceQueue){
+            AbstractDice newDiceCopy = dice.GetCopy();
+            newDiceCopy.diceOwner = this.abilityOwner;
+            deepCopy.Add(newDiceCopy);
+        }
+        return deepCopy;
+    }
 }
