@@ -12,5 +12,11 @@ public class AbilityMove : AbstractAbility {
         0,
         1,
         0
-    ){}
+    ){
+        CombatEventManager.OnAbilityUse += HealWhenUsed;
+    }
+
+    private void HealWhenUsed(AbstractAbility abilityUsed){
+        Debug.Log("TEST");
+    }
 }
