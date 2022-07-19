@@ -11,10 +11,11 @@ public static class CombatEventManager {
     public static event Action<AbstractCharacter> OnCharacterTurnStart;
     public static event Action<AbstractCharacter> OnCharacterTurnEnd;
     public static event Action<AbstractAbility> OnAbilityUse;
-    public static event Action<AbstractDice> OnDiceRoll;
+    public static event Action<AbstractDice> OnDiceClash;
+    public static event Action<AbstractDice> OnDicePreRoll;
+    public static event Action<AbstractDice> OnDicePostRoll;
     public static event Action<AbstractAbility, AbstractDice, int> OnHit;
     public static event Action<AbstractAbility> OnClashAbility;
-    public static event Action<AbstractDice> OnClashDice;
     public static event Action<AbstractAbility, AbstractDice> OnClashWin;
     public static event Action<AbstractAbility, AbstractDice> OnClashLose;
 
@@ -38,10 +39,22 @@ public static class CombatEventManager {
         OnAbilityUse?.Invoke(abilityUsed);
     }
 
-    public static void InvokeDiceRoll(AbstractDice dieRolled){
-        OnDiceRoll?.Invoke(dieRolled);
+    ///<summary>Called before a dice clashes with another dice.</summary>
+    public static void InvokeDiceClash(AbstractDice clashingDice){
+        OnDiceClash?.Invoke(clashingDice);
     }
 
+    ///<summary>Called before a dice's value is rolled.</summary>
+    public static void InvokeDicePreRoll(AbstractDice dieRolled){
+        OnDicePreRoll?.Invoke(dieRolled);
+    }
+
+    ///<summary>Called after a dice's value is rolled.</summary>
+    public static void InvokeDicePostRoll(AbstractDice dieRolled){
+        OnDicePostRoll?.Invoke(dieRolled);
+    }
+
+    ///<summary>Called when an Attack dice is rolled, before damage is dealt.</summary>
     public static void InvokeHit(AbstractAbility hittingAbility, AbstractDice dieRolled, int roll){
         OnHit?.Invoke(hittingAbility, dieRolled, roll);
     }
@@ -49,11 +62,6 @@ public static class CombatEventManager {
     ///<summary>Whenever this method is called, call it twice, once for each clash participant.</summary>
     public static void InvokeClashAbility(AbstractAbility clashingAbility){
         OnClashAbility?.Invoke(clashingAbility);
-    }
-
-    ///<summary>Whenever this method is called, call it twice, once for each die participant.</summary>
-    public static void InvokeClashDice(AbstractDice clashingDice){
-        OnClashDice?.Invoke(clashingDice);
     }
     
     public static void InvokeClashWin(AbstractAbility winningAbility, AbstractDice dieRolled){

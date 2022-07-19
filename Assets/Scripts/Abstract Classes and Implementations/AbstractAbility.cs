@@ -40,7 +40,6 @@ public abstract class AbstractAbility {
     public AbstractCharacter abilityOwner;
     public int curCooldown;     // Current cooldown of this ability. When this ability is successfully activated, increase cooldown by BASE_CD.
 
-
     public AbstractAbility(string ABILITY_ID, string ABILITY_NAME, AbilityType ABILITY_TYPE, int BASE_CD, int ABILITY_MIN_RANGE, int ABILITY_MAX_RANGE,
                             int VALOR_COST = 0,
                             List<AbilityTags> tags = null, 
@@ -69,9 +68,16 @@ public abstract class AbstractAbility {
     }
 
     /// <summary>
-    /// Perform any on-use actions.
+    /// Subscribe to any relevant events.
     /// </summary>
-    public virtual void Use(){
+    public virtual void OnEquip(){
+
+    }
+
+    /// <summary>
+    /// Unsubscribe from all relevant events.
+    /// </summary>
+    public virtual void OnUnequip(){
 
     }
 
