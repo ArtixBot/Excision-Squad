@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using UnityEngine;
 
-public enum AbilityType { MELEE, RANGED, UTILITY };
+public enum AbilityType { ATTACK, UTILITY };
 
 /// <summary>Ability targeting types.</summary>
 public enum AbilityTargetingModifier {

@@ -8,7 +8,7 @@ public class AbilityTestAttack : AbstractAbility {
     public AbilityTestAttack() : base(
         ID,
         "Test Attack",
-        AbilityType.MELEE,
+        AbilityType.ATTACK,
         1,
         0,
         1

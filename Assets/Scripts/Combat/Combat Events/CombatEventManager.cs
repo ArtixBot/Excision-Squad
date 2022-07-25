@@ -12,12 +12,17 @@ public static class CombatEventManager {
     public static event Action<AbstractCharacter> OnCharacterTurnEnd;
     public static event Action<AbstractAbility> OnAbilityUse;
     public static event Action<AbstractDice> OnDiceClash;
-    public static event Action<AbstractDice> OnDicePreRoll;
-    public static event Action<AbstractDice> OnDicePostRoll;
+    public static event Action<AbstractAbility, AbstractDice> OnDiceClashLose;
+    public static event Action<AbstractAbility, AbstractDice> OnDiceClashWin;
+    public static event Action<AbstractDice> OnDicePreroll;
+    public static event Action<AbstractDice> OnDiceRolled;
     public static event Action<AbstractAbility, AbstractDice, int> OnHit;
     public static event Action<AbstractAbility> OnClashAbility;
-    public static event Action<AbstractAbility, AbstractDice> OnClashWin;
-    public static event Action<AbstractAbility, AbstractDice> OnClashLose;
+    public static event Action<AbstractCharacter, AbstractCharacter> OnCharDeath;
+
+    public static void InvokeAbilityUse(AbstractAbility abilityUsed){
+        OnAbilityUse?.Invoke(abilityUsed);
+    }
 
     public static void InvokeRoundStart(int currentRound){
         OnRoundStart?.Invoke(currentRound);
@@ -35,26 +40,32 @@ public static class CombatEventManager {
         OnCharacterTurnEnd?.Invoke(character);
     }
 
-    public static void InvokeAbilityUse(AbstractAbility abilityUsed){
-        OnAbilityUse?.Invoke(abilityUsed);
-    }
-
     ///<summary>Called before a dice clashes with another dice.</summary>
     public static void InvokeDiceClash(AbstractDice clashingDice){
         OnDiceClash?.Invoke(clashingDice);
     }
 
+    ///<summary>Called after a dice wins its clash.</summary>
+    public static void InvokeDiceClashWin(AbstractAbility winningAbility, AbstractDice dieRolled){
+        OnDiceClashWin?.Invoke(winningAbility, dieRolled);
+    }
+
+    ///<summary>Called after a dice loses its clash.</summary>
+    public static void InvokeDiceClashLose(AbstractAbility losingAbility, AbstractDice dieRolled){
+        OnDiceClashLose?.Invoke(losingAbility, dieRolled);
+    }
+
     ///<summary>Called before a dice's value is rolled.</summary>
-    public static void InvokeDicePreRoll(AbstractDice dieRolled){
-        OnDicePreRoll?.Invoke(dieRolled);
+    public static void InvokeDicePreroll(AbstractDice dieRolled){
+        OnDicePreroll?.Invoke(dieRolled);
     }
 
     ///<summary>Called after a dice's value is rolled.</summary>
-    public static void InvokeDicePostRoll(AbstractDice dieRolled){
-        OnDicePostRoll?.Invoke(dieRolled);
+    public static void InvokeDiceRolled(AbstractDice dieRolled){
+        OnDiceRolled?.Invoke(dieRolled);
     }
 
-    ///<summary>Called when an Attack dice is rolled, before damage is dealt.</summary>
+    ///<summary>Called when an Attack or Block dice is rolled, after damage / Poise damage is dealt.</summary>
     public static void InvokeHit(AbstractAbility hittingAbility, AbstractDice dieRolled, int roll){
         OnHit?.Invoke(hittingAbility, dieRolled, roll);
     }
@@ -63,12 +74,9 @@ public static class CombatEventManager {
     public static void InvokeClashAbility(AbstractAbility clashingAbility){
         OnClashAbility?.Invoke(clashingAbility);
     }
-    
-    public static void InvokeClashWin(AbstractAbility winningAbility, AbstractDice dieRolled){
-        OnClashWin?.Invoke(winningAbility, dieRolled);
-    }
 
-    public static void InvokeClashLose(AbstractAbility losingAbility, AbstractDice dieRolled){
-        OnClashLose?.Invoke(losingAbility, dieRolled);
+    public static void InvokeCharDeath(AbstractCharacter killer, AbstractCharacter victim){
+        // NOTE: killer can be NULL if killed by a status effect!
+        OnCharDeath?.Invoke(killer, victim);
     }
 }

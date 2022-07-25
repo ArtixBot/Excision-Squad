@@ -69,7 +69,7 @@ public abstract class AbstractCharacter {
 public class CharacterDeckard : AbstractCharacter{
 
     private static string ID = "CHAR_DECKARD";
-    private static int initialMaxHP = 20, initialMaxPoise = 20, initialMaxActions = 1;
+    private static int initialMaxHP = 20, initialMaxPoise = 20, initialMaxActions = 2;
     private static int initialMinSpd = 1, initialMaxSpd = 6;
 
     public CharacterDeckard() : base(CharacterDeckard.ID,
