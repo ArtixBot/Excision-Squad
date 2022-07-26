@@ -10,7 +10,7 @@ public class CombatRender : MonoBehaviour
         List<AbstractCharacter> testData = new List<AbstractCharacter>();
         testData.Add(new CharacterDeckard());
         testData.Add(new CharacterDeckard());
-        testData[1].CHAR_NAME = "Deckard 2";
+        testData[1].CHAR_NAME = "Deckard II";
         CombatManager.StartCombat(testData);
         // CombatManager.activePlayerAbility = new AbilityTestAttack();
         // CombatManager.ResolveCombat();
@@ -36,13 +36,15 @@ public class CombatRender : MonoBehaviour
 
     void Update() {
         if (Input.GetKeyUp(KeyCode.E)){
+            CombatManager.EndCharacterTurn();
             Debug.Log("E");
         }
         if (Input.GetKeyUp(KeyCode.Q)){
             string debug = "Currently round {0}. Current active character: {1}. Current turn order: ";
-            // foreach ((int, AbstractCharacter) character in CombatManager.turnQueue.GetTurnList()){
-            //     debug = debug + "\n - " + character.Item2.CHAR_NAME;
-            // }
+            for (int i = 0; i < CombatManager.turnQueue.GetTurnList().Count; i++){
+                (int, AbstractCharacter) pair = CombatManager.turnQueue.GetTurnList()[i];
+                debug = debug + "\n - " + pair.Item2.CHAR_NAME + " (" + pair.Item1 + ")";
+            }
             Debug.LogFormat(debug, CombatManager.round, CombatManager.activeCharacter.CHAR_NAME);
         }
     }

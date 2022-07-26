@@ -15,6 +15,8 @@ public class InitiativeQueue {
         while (i < this.turnList.Count){
             if (speed < this.turnList[i].Item1){
                 i++;
+            } else {        // The turnlist is in descending order of speed; if our current order of speed is >= the speed at index i, stop immediately.
+                break;
             }
         }
         this.turnList.Insert(i, (speed, character));

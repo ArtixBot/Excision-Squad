@@ -13,7 +13,7 @@ public abstract class AbstractCharacter {
     public int maxHP, curHP;
     public int maxPoise, curPoise;
 
-    public int actionsPerRound;
+    public int actionsPerRound = 0;
     public int minSpd, maxSpd;          // At the start of each round, for each action the user has, roll for speed between [minSpeed, maxSpeed] + speedMod
     public int curLane;                 // The current lane that this character is in. Ranges from [0, 5]
     
