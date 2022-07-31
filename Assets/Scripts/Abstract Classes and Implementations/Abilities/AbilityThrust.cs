@@ -9,6 +9,7 @@ public class AbilityThrust : AbstractAbility {
         ID,
         "Thrust",
         AbilityType.ATTACK,
+        typeof(AbstractCharacter),
         1,
         0,
         1
@@ -17,18 +18,19 @@ public class AbilityThrust : AbstractAbility {
         this.diceQueue.Add(new DiceAttack(2, 7));
     }
 
-    public override void OnEquip(){
+    public override void Subscribe(){
         CombatEventManager.OnAbilityUse += OnAbilityUse;
     }
 
-    public override void OnUnequip(){
+    public override void Unsubscribe(){
         CombatEventManager.OnAbilityUse -= OnAbilityUse;
     }
 
-    private void OnAbilityUse(AbstractAbility abilityUsed){
+    private void OnAbilityUse(AbstractAbility abilityUsed, AbilityTargeting target){
         if (abilityUsed == this){
             Debug.Log("MOVE THRUST");
-            abilityUsed.abilityOwner.curLane++;
+            AbstractCharacter charTarget = (AbstractCharacter) target.GetTargeting();
+            abilityUsed.abilityOwner.curLane = charTarget.curLane;
         }
     }
 }

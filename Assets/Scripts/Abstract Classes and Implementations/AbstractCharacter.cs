@@ -30,12 +30,12 @@ public abstract class AbstractCharacter {
     public float damageTakenMultMod = 1.0f;
 
     public HashSet<AbstractAbility> abilities = new HashSet<AbstractAbility>();
-    public AbstractAbility currentIntent {
-        get { return intents.FirstOrDefault(null); }
-    }
     // For players, this is only ever set right before they activate an ability and will only ever be of size one.
     // For enemies, this is set at the start of the round.
     private List<AbstractAbility> intents = new List<AbstractAbility>();
+    public AbstractAbility currentIntent {
+        get { return intents.FirstOrDefault(null); }
+    }
 
     public AbstractCharacter(string ID, string NAME, CharacterFaction FACTION, int maxHP, int maxPoise, int actionsPerRound, int minSpd, int maxSpd){
         this.CHAR_ID = ID;
@@ -57,12 +57,12 @@ public abstract class AbstractCharacter {
     public void LearnAbility(AbstractAbility ability){
         this.abilities.Add(ability);
         ability.abilityOwner = this;
-        ability.OnEquip();
+        ability.Subscribe();
     }
 
     public void UnlearnAbility(AbstractAbility ability){
         this.abilities.Remove(ability);
-        ability.OnUnequip();
+        ability.Unsubscribe();
     }
 }
 

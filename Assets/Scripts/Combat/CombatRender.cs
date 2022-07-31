@@ -37,7 +37,6 @@ public class CombatRender : MonoBehaviour
     void Update() {
         if (Input.GetKeyUp(KeyCode.E)){
             CombatManager.EndCharacterTurn();
-            Debug.Log("E");
         }
         if (Input.GetKeyUp(KeyCode.Q)){
             string debug = "Currently round {0}. Current active character: {1}. Current turn order: ";

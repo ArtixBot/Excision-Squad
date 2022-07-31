@@ -20,7 +20,7 @@ public static class CombatManager {
     // =========== COMBAT STATE VARIABLES ===========
     public static int round = 1;
     public static InitiativeQueue turnQueue = new InitiativeQueue();
-    public static List<AbstractCombatAction> combatActionQueue = new List<AbstractCombatAction>();
+    private static List<AbstractCombatAction> combatActionQueue = new List<AbstractCombatAction>();
     public static AbstractCharacter activeCharacter;
 
     // Tuple of (list of team members, team valor points, team type)
@@ -33,6 +33,14 @@ public static class CombatManager {
         {CharacterFaction.ENEMY_FACTION, ENEMY_TEAM}
     };
     
+    public static Dictionary<int, List<AbstractCharacter>> positions = new Dictionary<int, List<AbstractCharacter>>{
+        {0, new List<AbstractCharacter>()},
+        {1, new List<AbstractCharacter>()},
+        {2, new List<AbstractCharacter>()},
+        {3, new List<AbstractCharacter>()},
+        {4, new List<AbstractCharacter>()},
+        {5, new List<AbstractCharacter>()}
+    };
     // ========= END COMBAT STATE VARIABLES ========
 
     public static void StartCombat(List<AbstractCharacter> fighters){
@@ -74,24 +82,59 @@ public static class CombatManager {
         }
     }
 
-    public static void ActivateAbility(AbstractAbility ability, List<AbstractCharacter> targets) {
-        // AoE attacks never trigger a clash check.
-        CombatEventManager.InvokeAbilityUse(ability);
+    public static void ActivateAbility(AbstractAbility ability, AbilityTargeting target) {
+        CombatEventManager.InvokeAbilityUse(ability, target);
+        
+        // Utility abilities perform their work during InvokeAbilityUse so we can skip the rest of this method.
+        // All code following the next line is to handle attacks.
+        if (ability.ABILITY_TYPE == AbilityType.UTILITY) { return; }
+
+        object targeting = target.GetTargeting();
+        if (targeting is AbstractCharacter){    // Target is a single character.
+            CombatManager.ActivateSingleTargetAbility(ability, (AbstractCharacter) targeting);
+        } else {                                // Target is a list of characters, a lane, or a list of lanes.
+            CombatManager.ActivateAoeAbility(ability, targeting);
+        }
     }
 
-    public static void ActivateAbility(AbstractAbility ability, AbstractCharacter target) {
-        CombatEventManager.InvokeAbilityUse(ability);
-        bool clashOccurs = CheckForClash(ability.abilityOwner, target);
-
+    public static void ActivateSingleTargetAbility(AbstractAbility ability, AbstractCharacter target){
         List<AbstractDice> attackerDice = ability.GetDice();
         List<AbstractDice> defenderDice = new List<AbstractDice>();
+
+        bool clashOccurs = CheckForClash(ability.abilityOwner, target);
         if (clashOccurs) {
             AbstractAbility targetIntent = target.currentIntent;
-            CombatEventManager.InvokeAbilityUse(targetIntent);
+            CombatEventManager.InvokeAbilityUse(targetIntent, new AbilityTargeting(ability.abilityOwner));      // the defender also uses an ability!
             defenderDice = targetIntent.GetDice();
 
             CombatEventManager.InvokeClashAbility(ability);
             CombatEventManager.InvokeClashAbility(targetIntent);
+            CombatManager.turnQueue.RemoveCharacterNextAction(target);
+        }
+    }
+
+    // Abilties which target a lane, multiple lanes, or multiple characters go through this process.
+    public static void ActivateAoeAbility(AbstractAbility ability, object targetingInfo){
+        if (ability.ABILITY_TYPE == AbilityType.UTILITY) { return; }
+        List<AbstractDice> attackerDice = ability.GetDice();
+        List<AbstractCharacter> targetList = (targetingInfo is List<AbstractCharacter>) ? (List<AbstractCharacter>)targetingInfo : new List<AbstractCharacter>();
+
+        // For lane/multi-lane targeting, get the list of all characters in those lanes.
+        if (targetingInfo is int){
+            targetList.AddRange(CombatManager.positions[(int)targetingInfo]);     // Prefer against Concat as that creates a copy, AddRange adds to the existing list
+        } else if (targetingInfo is List<int>) {
+            foreach (int lane in (List<int>)targetingInfo){
+                targetList.AddRange(CombatManager.positions[lane]);
+            }
+        }
+
+        while (attackerDice.Count > 0){
+            AbstractDice die = attackerDice[0];
+            int value = die.Roll();
+            foreach (AbstractCharacter target in targetList){
+                die.TriggerEffect(ability.abilityOwner, target, value);
+            }
+            attackerDice.RemoveAt(0);
         }
     }
 
@@ -123,5 +166,9 @@ public static class CombatManager {
         } else {
             // If all agents are downed in combat, end the current run
         }
+    }
+
+    public static void AddActionToQueue(AbstractCombatAction action){
+        CombatManager.combatActionQueue.Add(action);
     }
 }

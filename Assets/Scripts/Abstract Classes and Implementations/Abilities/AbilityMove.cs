@@ -9,14 +9,17 @@ public class AbilityMove : AbstractAbility {
         ID,
         "Move",
         AbilityType.UTILITY,
+        typeof(int),
         0,
         1,
-        0
+        1
     ){
         CombatEventManager.OnAbilityUse += HealWhenUsed;
     }
 
-    private void HealWhenUsed(AbstractAbility abilityUsed){
-        Debug.Log("TEST");
+    private void HealWhenUsed(AbstractAbility abilityUsed, AbilityTargeting target){
+        if (abilityUsed == this){
+            abilityUsed.abilityOwner.curLane = (int)target.GetTargeting();
+        }
     }
 }

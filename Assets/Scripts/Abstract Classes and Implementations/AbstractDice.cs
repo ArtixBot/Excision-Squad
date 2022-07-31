@@ -1,11 +1,11 @@
-using System.Collections;
+ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public enum DiceType {ATTACK, BLOCK, EVADE};
 public enum DiceMod {ON_HIT, ON_CLASH_LOSE, ON_CLASH_WIN, ON_CLASH};
 
-public abstract class AbstractDice {
+public abstract class AbstractDice : ICombatEventSubscriber {
     public AbstractCharacter diceOwner;
     protected List<DiceMod> diceMods;
     protected DiceType diceType;
@@ -17,6 +17,11 @@ public abstract class AbstractDice {
     public abstract int Roll(int minValueMod = 0, int maxValueMod = 0);
 
     public abstract AbstractDice GetCopy();
+
+    public abstract void TriggerEffect(AbstractCharacter owner, AbstractCharacter target, int value);
+
+    public virtual void Subscribe(){}
+    public virtual void Unsubscribe(){}
 
     public new DiceType GetType(){
         return this.diceType;
@@ -46,6 +51,11 @@ public class DiceAttack : AbstractDice {
     public override AbstractDice GetCopy(){
         return new DiceAttack(this.minValue, this.maxValue, this.diceMods);
     }
+
+    public override void TriggerEffect(AbstractCharacter owner, AbstractCharacter target, int value){
+        CombatManager.AddActionToQueue(new CombatActionDamage(owner, target, value));
+        CombatManager.AddActionToQueue(new CombatActionPoiseDamage(owner, target, value));
+    }
 }
 
 public class DiceBlock : AbstractDice {
@@ -70,6 +80,10 @@ public class DiceBlock : AbstractDice {
     public override AbstractDice GetCopy(){
         return new DiceBlock(this.minValue, this.maxValue, this.diceMods);
     }
+
+    public override void TriggerEffect(AbstractCharacter owner, AbstractCharacter target, int value){
+        CombatManager.AddActionToQueue(new CombatActionPoiseDamage(owner, target, value));
+    }
 }
 
 public class DiceEvade : AbstractDice {
@@ -93,5 +107,9 @@ public class DiceEvade : AbstractDice {
 
     public override AbstractDice GetCopy(){
         return new DiceEvade(this.minValue, this.maxValue, this.diceMods);
+    }
+
+    public override void TriggerEffect(AbstractCharacter owner, AbstractCharacter target, int value){
+        CombatManager.AddActionToQueue(new CombatActionRecoverPoise(owner, value));
     }
 }

@@ -9,6 +9,7 @@ public class AbilityTestAttack : AbstractAbility {
         ID,
         "Test Attack",
         AbilityType.ATTACK,
+        typeof(AbstractCharacter),
         1,
         0,
         1

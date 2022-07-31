@@ -10,7 +10,7 @@ public static class CombatEventManager {
     public static event Action<int> OnRoundEnd;
     public static event Action<AbstractCharacter> OnCharacterTurnStart;
     public static event Action<AbstractCharacter> OnCharacterTurnEnd;
-    public static event Action<AbstractAbility> OnAbilityUse;
+    public static event Action<AbstractAbility, AbilityTargeting> OnAbilityUse;
     public static event Action<AbstractDice> OnDiceClash;
     public static event Action<AbstractAbility, AbstractDice> OnDiceClashLose;
     public static event Action<AbstractAbility, AbstractDice> OnDiceClashWin;
@@ -20,8 +20,8 @@ public static class CombatEventManager {
     public static event Action<AbstractAbility> OnClashAbility;
     public static event Action<AbstractCharacter, AbstractCharacter> OnCharDeath;
 
-    public static void InvokeAbilityUse(AbstractAbility abilityUsed){
-        OnAbilityUse?.Invoke(abilityUsed);
+    public static void InvokeAbilityUse(AbstractAbility abilityUsed, AbilityTargeting target){
+        OnAbilityUse?.Invoke(abilityUsed, target);
     }
 
     public static void InvokeRoundStart(int currentRound){
