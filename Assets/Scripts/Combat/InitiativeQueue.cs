@@ -58,7 +58,7 @@ public class InitiativeQueue {
     }
 
     // <summary>Remove all actions of a specific character from the queue (use when a character dies or has Poise broken)</summary>
-    public void RemoveCharacter(AbstractCharacter character){
+    public void RemoveCharacterFromQueue(AbstractCharacter character){
         this.turnList.RemoveAll(item => item.Item2.Equals(character));
     }
 }

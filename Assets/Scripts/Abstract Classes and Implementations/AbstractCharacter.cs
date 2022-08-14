@@ -57,12 +57,10 @@ public abstract class AbstractCharacter {
     public void LearnAbility(AbstractAbility ability){
         this.abilities.Add(ability);
         ability.abilityOwner = this;
-        ability.Subscribe();
     }
 
     public void UnlearnAbility(AbstractAbility ability){
         this.abilities.Remove(ability);
-        ability.Unsubscribe();
     }
 }
 

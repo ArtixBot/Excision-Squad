@@ -51,7 +51,6 @@ public abstract class AbstractAbility : ICombatEventSubscriber {
         this.BASE_MAX_RANGE = ABILITY_MAX_RANGE;
         this.BASE_VALOR_COST = VALOR_COST;
         this.isAoE = (this.targetingType.GetTargeting() is List<AbstractCharacter> || this.targetingType.GetTargeting() is List<int> || this.targetingType.GetTargeting() is int);
-        // this.isAoE = this.targetingModifers.Overlaps(aoeMods);
     }
     
     public virtual void Subscribe(){}
@@ -65,7 +64,6 @@ public abstract class AbstractAbility : ICombatEventSubscriber {
         if (CombatManager.mapFactionToTeam[this.abilityOwner.CHAR_FACTION].Item2 < this.BASE_VALOR_COST) { return false; }
         return true;
     }
-
 
 
     /// <summary>Returns a deep copy of this ability's diceQueue.</summary>

@@ -48,6 +48,9 @@ public static class CombatManager {
         CombatManager.round = 1;
         foreach (AbstractCharacter fighter in fighters){
             mapFactionToTeam[fighter.CHAR_FACTION].Item1.Add(fighter);
+            foreach (AbstractAbility ability in fighter.abilities){
+                ability.Subscribe();
+            }
         }
         CombatManager.StartRound();
     }
@@ -91,13 +94,13 @@ public static class CombatManager {
 
         object targeting = target.GetTargeting();
         if (targeting is AbstractCharacter){    // Target is a single character.
-            CombatManager.ActivateSingleTargetAbility(ability, (AbstractCharacter) targeting);
+            CombatManager.ActivateSingleTargetAttack(ability, (AbstractCharacter) targeting);
         } else {                                // Target is a list of characters, a lane, or a list of lanes.
-            CombatManager.ActivateAoeAbility(ability, targeting);
+            CombatManager.ActivateAoeAttack(ability, targeting);
         }
     }
 
-    public static void ActivateSingleTargetAbility(AbstractAbility ability, AbstractCharacter target){
+    public static void ActivateSingleTargetAttack(AbstractAbility ability, AbstractCharacter target){
         List<AbstractDice> attackerDice = ability.GetDice();
         List<AbstractDice> defenderDice = new List<AbstractDice>();
 
@@ -114,7 +117,7 @@ public static class CombatManager {
     }
 
     // Abilties which target a lane, multiple lanes, or multiple characters go through this process.
-    public static void ActivateAoeAbility(AbstractAbility ability, object targetingInfo){
+    public static void ActivateAoeAttack(AbstractAbility ability, object targetingInfo){
         if (ability.ABILITY_TYPE == AbilityType.UTILITY) { return; }
         List<AbstractDice> attackerDice = ability.GetDice();
         List<AbstractCharacter> targetList = (targetingInfo is List<AbstractCharacter>) ? (List<AbstractCharacter>)targetingInfo : new List<AbstractCharacter>();
@@ -164,11 +167,12 @@ public static class CombatManager {
         if (victory) {
             // Display rewards overlay
         } else {
-            // If all agents are downed in combat, end the current run
+            // If all agents are downed in combat, end the current run/mission
         }
     }
 
     public static void AddActionToQueue(AbstractCombatAction action){
-        CombatManager.combatActionQueue.Add(action);
+        action.Resolve();
+        // CombatManager.combatActionQueue.Add(action);
     }
 }
