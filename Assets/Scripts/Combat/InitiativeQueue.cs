@@ -23,17 +23,25 @@ public class InitiativeQueue {
         this.turnList.Insert(i, (speed, character));
     }
 
-    public AbstractCharacter Pop(){
-        if (this.turnList.Count == 0) { return null; }
+    public (int, AbstractCharacter) Pop(){
+        if (this.turnList.Count == 0) { return (0, null); }
+        int speed = this.turnList[0].Item1;
         AbstractCharacter character = this.turnList[0].Item2;
         this.turnList.RemoveAt(0);
-        return character;
+        return (speed, character);
     }
 
-    public AbstractCharacter Get(){
-        if (this.turnList.Count == 0) { return null; }
-        AbstractCharacter character = this.turnList[0].Item2;
-        return character;
+    // <summary>If the specific character has an action remaining in the queue, return its next action on the timeline. Otherwise, returns (0, null).</summary>
+    public (int, AbstractCharacter) GetCharacterNextAction(AbstractCharacter character){
+        (int, AbstractCharacter) returnValue = (0, null);
+        if (!ContainsCharacter(character)) { return returnValue; }
+        foreach((int, AbstractCharacter) pair in this.turnList){
+            if (pair.Item2.Equals(character)){
+                returnValue = pair;
+                break;
+            }
+        }
+        return returnValue;
     }
     
     public bool ContainsCharacter(AbstractCharacter character){

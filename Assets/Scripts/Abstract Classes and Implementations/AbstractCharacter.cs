@@ -5,6 +5,13 @@ using UnityEngine;
 
 public enum CharacterFaction {PLAYER_FACTION, NEUTRAL_FACTION, ENEMY_FACTION};
 
+public readonly struct CharacterIntent {
+    public readonly int spd;
+    public readonly AbstractAbility ability;
+
+    public CharacterIntent (int speed, AbstractAbility charAbility) => (spd, ability) = (speed, charAbility);
+}
+
 public abstract class AbstractCharacter {
     public string CHAR_ID;
     public string CHAR_NAME;
@@ -32,8 +39,8 @@ public abstract class AbstractCharacter {
     public HashSet<AbstractAbility> abilities = new HashSet<AbstractAbility>();
     // For players, this is only ever set right before they activate an ability and will only ever be of size one.
     // For enemies, this is set at the start of the round.
-    private List<AbstractAbility> intents = new List<AbstractAbility>();
-    public AbstractAbility currentIntent {
+    private List<CharacterIntent> intents = new List<CharacterIntent>();
+    public CharacterIntent currentIntent {
         get { return intents.FirstOrDefault(null); }
     }
 

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using UnityEngine;
 
-public enum AbilityType { ATTACK, UTILITY };
+public enum AbilityType { ATTACK, UTILITY, REACTION };
 
 public class AbilityTargeting {
     private object _target;

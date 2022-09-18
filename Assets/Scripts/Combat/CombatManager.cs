@@ -22,6 +22,7 @@ public static class CombatManager {
     public static InitiativeQueue turnQueue = new InitiativeQueue();
     private static List<AbstractCombatAction> combatActionQueue = new List<AbstractCombatAction>();
     public static AbstractCharacter activeCharacter;
+    public static int activeCharacterSpeed;
 
     // Tuple of (list of team members, team valor points, team type)
     public static (List<AbstractCharacter>, int, Team) PLAYER_TEAM   = (new List<AbstractCharacter>(), 0, Team.PLAYER_TEAM);
@@ -69,12 +70,15 @@ public static class CombatManager {
     }
 
     public static void StartNextCharacterTurn(){
-        AbstractCharacter character = turnQueue.Pop();
+        (int, AbstractCharacter) nextCharData = turnQueue.Pop();
+        AbstractCharacter character = nextCharData.Item2;
         if (character == null) {            // If there are no more character actions in the queue then start the next round.
             CombatManager.EndRound();
             return;
         }
+
         CombatManager.activeCharacter = character;
+        CombatManager.activeCharacterSpeed = nextCharData.Item1;
         CombatEventManager.InvokeCharTurnStart(character);
         if (character.CHAR_FACTION == CharacterFaction.ENEMY_FACTION || character.CHAR_FACTION == CharacterFaction.NEUTRAL_FACTION){
             // enemy AI processing
@@ -106,13 +110,21 @@ public static class CombatManager {
 
         bool clashOccurs = CheckForClash(ability.abilityOwner, target);
         if (clashOccurs) {
-            AbstractAbility targetIntent = target.currentIntent;
+            (int, AbstractCharacter) defenderAction = CombatManager.turnQueue.GetCharacterNextAction(target);
+
+            AbstractAbility targetIntent = target.currentIntent.ability;
             CombatEventManager.InvokeAbilityUse(targetIntent, new AbilityTargeting(ability.abilityOwner));      // the defender also uses an ability!
             defenderDice = targetIntent.GetDice();
 
-            CombatEventManager.InvokeClashAbility(ability);
-            CombatEventManager.InvokeClashAbility(targetIntent);
+            CombatEventManager.InvokeClashAbility(ability, targetIntent);
             CombatManager.turnQueue.RemoveCharacterNextAction(target);
+        }
+        while (attackerDice.Count > 0 && defenderDice.Count > 0){
+        }
+        List<AbstractDice> remainingDice = (attackerDice.Count > 0) ? attackerDice : defenderDice;
+        while (remainingDice.Count > 0){
+            AbstractDice die = remainingDice[0];
+            remainingDice.RemoveAt(0);
         }
     }
 
@@ -142,8 +154,8 @@ public static class CombatManager {
     }
 
     public static bool CheckForClash(AbstractCharacter attacker, AbstractCharacter defender){
-        AbstractAbility attackIntent = attacker.currentIntent;
-        AbstractAbility defendIntent = defender.currentIntent;
+        AbstractAbility attackIntent = attacker.currentIntent.ability;
+        AbstractAbility defendIntent = defender.currentIntent.ability;
         if (attackIntent == null || defendIntent == null || !defender.HasActionsRemaining()) { return false; }
         // TODO: Add check to prevent clash if attacker intent has Sneaky tag.
         // TODO: Add check to prevent clash if defender is Stunned or Staggered.

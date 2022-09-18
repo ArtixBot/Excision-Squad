@@ -39,12 +39,12 @@ public class CombatRender : MonoBehaviour
             CombatManager.EndCharacterTurn();
         }
         if (Input.GetKeyUp(KeyCode.Q)){
-            string debug = "Currently round {0}. Current active character: {1}. Current turn order: ";
+            string debug = "Currently round {0}. Current active character: {1} ({2}). Current turn order: ";
             for (int i = 0; i < CombatManager.turnQueue.GetTurnList().Count; i++){
                 (int, AbstractCharacter) pair = CombatManager.turnQueue.GetTurnList()[i];
                 debug = debug + "\n - " + pair.Item2.CHAR_NAME + " (" + pair.Item1 + ")";
             }
-            Debug.LogFormat(debug, CombatManager.round, CombatManager.activeCharacter.CHAR_NAME);
+            Debug.LogFormat(debug, CombatManager.round, CombatManager.activeCharacter.CHAR_NAME, CombatManager.activeCharacterSpeed);
         }
     }
 

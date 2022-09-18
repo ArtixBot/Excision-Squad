@@ -17,7 +17,7 @@ public static class CombatEventManager {
     public static event Action<AbstractDice> OnDicePreroll;
     public static event Action<AbstractDice> OnDiceRolled;
     public static event Action<AbstractAbility, AbstractDice, int> OnHit;
-    public static event Action<AbstractAbility> OnClashAbility;
+    public static event Action<AbstractAbility, AbstractAbility> OnAbilityClash;
     public static event Action<AbstractCharacter, AbstractCharacter> OnCharDeath;
 
     public static void InvokeAbilityUse(AbstractAbility abilityUsed, AbilityTargeting target){
@@ -71,8 +71,8 @@ public static class CombatEventManager {
     }
     
     ///<summary>Whenever this method is called, call it twice, once for each clash participant.</summary>
-    public static void InvokeClashAbility(AbstractAbility clashingAbility){
-        OnClashAbility?.Invoke(clashingAbility);
+    public static void InvokeClashAbility(AbstractAbility clashA, AbstractAbility clashB){
+        OnAbilityClash?.Invoke(clashA, clashB);
     }
 
     public static void InvokeCharDeath(AbstractCharacter killer, AbstractCharacter victim){
