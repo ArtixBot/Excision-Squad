@@ -61,7 +61,7 @@ public abstract class AbstractAbility : ICombatEventSubscriber {
     /// </summary>
     public virtual bool IsActivatable(){
         if (this.curCooldown > 0) { return false; }
-        if (CombatManager.mapFactionToTeam[this.abilityOwner.CHAR_FACTION].Item2 < this.BASE_VALOR_COST) { return false; }
+        if (CombatManager.factionMap[this.abilityOwner.CHAR_FACTION].valorPoints < this.BASE_VALOR_COST) { return false; }
         return true;
     }
 

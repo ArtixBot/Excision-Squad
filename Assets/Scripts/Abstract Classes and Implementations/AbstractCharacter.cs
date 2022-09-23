@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public enum CharacterFaction {PLAYER_FACTION, NEUTRAL_FACTION, ENEMY_FACTION};
-
 public readonly struct CharacterIntent {
     public readonly int spd;
     public readonly AbstractAbility ability;
@@ -15,7 +13,7 @@ public readonly struct CharacterIntent {
 public abstract class AbstractCharacter {
     public string CHAR_ID;
     public string CHAR_NAME;
-    public CharacterFaction CHAR_FACTION;
+    public FactionType CHAR_FACTION;
 
     public int maxHP, curHP;
     public int maxPoise, curPoise;
@@ -44,7 +42,7 @@ public abstract class AbstractCharacter {
         get { return intents.FirstOrDefault(null); }
     }
 
-    public AbstractCharacter(string ID, string NAME, CharacterFaction FACTION, int maxHP, int maxPoise, int actionsPerRound, int minSpd, int maxSpd){
+    public AbstractCharacter(string ID, string NAME, FactionType FACTION, int maxHP, int maxPoise, int actionsPerRound, int minSpd, int maxSpd){
         this.CHAR_ID = ID;
         this.CHAR_NAME = NAME;
         this.CHAR_FACTION = FACTION;
@@ -79,7 +77,7 @@ public class CharacterDeckard : AbstractCharacter{
 
     public CharacterDeckard() : base(CharacterDeckard.ID,
                                     "Deckard",
-                                    CharacterFaction.PLAYER_FACTION,
+                                    FactionType.PLAYER_FACTION,
                                     initialMaxHP,
                                     initialMaxPoise,
                                     initialMaxActions,

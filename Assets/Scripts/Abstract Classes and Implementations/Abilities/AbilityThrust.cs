@@ -19,11 +19,11 @@ public class AbilityThrust : AbstractAbility {
     }
 
     public override void Subscribe(){
-        CombatEventManager.OnAbilityUse += OnAbilityUse;
+        CombatEventManager.OnAbilityUse += this.OnAbilityUse;
     }
 
     public override void Unsubscribe(){
-        CombatEventManager.OnAbilityUse -= OnAbilityUse;
+        CombatEventManager.OnAbilityUse -= this.OnAbilityUse;
     }
 
     private void OnAbilityUse(AbstractAbility abilityUsed, AbilityTargeting target){

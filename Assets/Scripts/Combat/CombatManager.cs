@@ -9,13 +9,22 @@ using UnityEngine;
  * Players/Enemies play their turns
  * Round End
 */
-public enum Team {PLAYER_TEAM, NEUTRAL_TEAM, ENEMY_TEAM};
+public enum FactionType {PLAYER_FACTION, NEUTRAL_FACTION, ENEMY_FACTION};
+public class Faction {
+    public FactionType factionType;
+    public List<AbstractCharacter> characters;
+    public int valorPoints;
 
+    public Faction(FactionType factionType){
+        this.factionType = factionType;
+        this.characters = new List<AbstractCharacter>();
+        this.valorPoints = 0;
+    }
+}
 
 public static class CombatManager {
 
     public static CombatRender combatRender;
-
 
     // =========== COMBAT STATE VARIABLES ===========
     public static int round = 1;
@@ -24,14 +33,13 @@ public static class CombatManager {
     public static AbstractCharacter activeCharacter;
     public static int activeCharacterSpeed;
 
-    // Tuple of (list of team members, team valor points, team type)
-    public static (List<AbstractCharacter>, int, Team) PLAYER_TEAM   = (new List<AbstractCharacter>(), 0, Team.PLAYER_TEAM);
-    public static (List<AbstractCharacter>, int, Team) NEUTRAL_TEAM  = (new List<AbstractCharacter>(), 0, Team.NEUTRAL_TEAM);
-    public static (List<AbstractCharacter>, int, Team) ENEMY_TEAM    = (new List<AbstractCharacter>(), 0, Team.ENEMY_TEAM);
-    public static readonly Dictionary<CharacterFaction, (List<AbstractCharacter>, int, Team)> mapFactionToTeam = new Dictionary<CharacterFaction, (List<AbstractCharacter>, int, Team)>{
-        {CharacterFaction.PLAYER_FACTION, PLAYER_TEAM},
-        {CharacterFaction.NEUTRAL_FACTION, NEUTRAL_TEAM},
-        {CharacterFaction.ENEMY_FACTION, ENEMY_TEAM}
+    public static Faction PLAYER_FACTION = new Faction(FactionType.PLAYER_FACTION);
+    public static Faction NEUTRAL_FACTION = new Faction(FactionType.NEUTRAL_FACTION);
+    public static Faction ENEMY_FACTION = new Faction(FactionType.ENEMY_FACTION);
+    public static readonly Dictionary<FactionType, Faction> factionMap = new Dictionary<FactionType, Faction>{
+        {FactionType.PLAYER_FACTION, PLAYER_FACTION},
+        {FactionType.NEUTRAL_FACTION, NEUTRAL_FACTION},
+        {FactionType.ENEMY_FACTION, ENEMY_FACTION}
     };
     
     public static Dictionary<int, List<AbstractCharacter>> positions = new Dictionary<int, List<AbstractCharacter>>{
@@ -48,10 +56,11 @@ public static class CombatManager {
         combatRender = GameObject.FindObjectOfType<CombatRender>();
         CombatManager.round = 1;
         foreach (AbstractCharacter fighter in fighters){
-            mapFactionToTeam[fighter.CHAR_FACTION].Item1.Add(fighter);
+            factionMap[fighter.CHAR_FACTION].characters.Add(fighter);
             foreach (AbstractAbility ability in fighter.abilities){
                 ability.Subscribe();
             }
+            // TODO: Subscribe all passives of the fighter as well.
         }
         CombatManager.StartRound();
     }
@@ -60,7 +69,7 @@ public static class CombatManager {
         CombatEventManager.InvokeRoundStart(CombatManager.round);
         // At the start of a round, process start-of-round status effects, then each fighter rolls for speed equal to the number of their actions.
         // On an initiative tie, players go first, then neutrals, then enemies.
-        foreach (AbstractCharacter fighter in ENEMY_TEAM.Item1.Concat(NEUTRAL_TEAM.Item1).Concat(PLAYER_TEAM.Item1).ToList()){
+        foreach (AbstractCharacter fighter in ENEMY_FACTION.characters.Concat(NEUTRAL_FACTION.characters).Concat(PLAYER_FACTION.characters).ToList()){
             for (int i = 0; i < fighter.actionsPerRound; i++){
                 int speed = fighter.speedMod + Random.Range(fighter.minSpd, fighter.maxSpd + 1);
                 turnQueue.Enqueue(speed, fighter);
@@ -80,7 +89,7 @@ public static class CombatManager {
         CombatManager.activeCharacter = character;
         CombatManager.activeCharacterSpeed = nextCharData.Item1;
         CombatEventManager.InvokeCharTurnStart(character);
-        if (character.CHAR_FACTION == CharacterFaction.ENEMY_FACTION || character.CHAR_FACTION == CharacterFaction.NEUTRAL_FACTION){
+        if (character.CHAR_FACTION == FactionType.ENEMY_FACTION || character.CHAR_FACTION == FactionType.NEUTRAL_FACTION){
             // enemy AI processing
         } else {
             foreach (AbstractAbility ability in character.abilities){
@@ -108,8 +117,7 @@ public static class CombatManager {
         List<AbstractDice> attackerDice = ability.GetDice();
         List<AbstractDice> defenderDice = new List<AbstractDice>();
 
-        bool clashOccurs = CheckForClash(ability.abilityOwner, target);
-        if (clashOccurs) {
+        if (CheckForClash(ability.abilityOwner, target)) {
             (int, AbstractCharacter) defenderAction = CombatManager.turnQueue.GetCharacterNextAction(target);
 
             AbstractAbility targetIntent = target.currentIntent.ability;

@@ -22,6 +22,7 @@ public static class CombatEventManager {
 
     public static void InvokeAbilityUse(AbstractAbility abilityUsed, AbilityTargeting target){
         OnAbilityUse?.Invoke(abilityUsed, target);
+        abilityUsed.curCooldown = abilityUsed.BASE_CD;
     }
 
     public static void InvokeRoundStart(int currentRound){
@@ -78,5 +79,23 @@ public static class CombatEventManager {
     public static void InvokeCharDeath(AbstractCharacter killer, AbstractCharacter victim){
         // NOTE: killer can be NULL if killed by a status effect!
         OnCharDeath?.Invoke(killer, victim);
+        // Unsubscribe the dead unit's abilities.
+        // TODO: Also unsubscribe character passives
+        foreach (AbstractAbility ability in victim.abilities){
+            ability.Unsubscribe();
+        }
+        // Remove the unit CombatEventManager.positions as well as the team tracker.
+        CombatManager.positions[victim.curLane].Remove(victim);
+        CombatManager.factionMap[victim.CHAR_FACTION].characters.Remove(victim);
+
+        // If the unit's faction no longer has any units and the faction is the player/enemy faction, trigger encounter end sequence.
+        // Neutral factions currently have no special behavior when their last character dies.
+        if (CombatManager.factionMap[victim.CHAR_FACTION].characters.Count == 0){
+            if (victim.CHAR_FACTION == FactionType.PLAYER_FACTION){
+                // TODO: Loss handling
+            } else if (victim.CHAR_FACTION == FactionType.ENEMY_FACTION){
+                // TODO: Win handling
+            }
+        }
     }
 }
