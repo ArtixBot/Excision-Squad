@@ -17,6 +17,10 @@ public static class CombatManager {
 
     public static InitiativeQueue initiativeQueue = new InitiativeQueue();
     public static int round;
+    public static (AbstractCharacter character, int spd) activeChar;
+
+    public static AbstractAbility attackingAbility;
+    public static AbstractAbility defendingAbility;
 
     public static void SetUp(EncounterData encounterData){
         foreach(AbstractCharacter character in encounterData.incomingCombatants){
@@ -35,6 +39,17 @@ public static class CombatManager {
             }
         }
         CombatManager.round += 1;
+        CombatManager.activeChar = initiativeQueue.PopNextTurnFromTurnlist();
+        CombatEventManager.TriggerEvent(CombatEventType.ON_ROUND_START);
+    }
+
+    public static void ResolveAbility(AbstractAbility ability){
+        if (ability.IsUnavailable()) return;
+        CombatEventManager.TriggerEvent(CombatEventType.ON_ABILITY_ACTIVATED, new CombatEventDataAbilityActivated(ability));
+    }
+
+    public static void EndRound(){
+
     }
 
     public static void CleanUp(){

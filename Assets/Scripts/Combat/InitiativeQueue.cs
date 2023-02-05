@@ -28,15 +28,32 @@ public class InitiativeQueue {
     }
 
     /// <summary>Returns the next character in the initaitive queue in the tuple (AbstractCharacter character, int spd).<br/>
-    /// If popFromQueue is true (default: true), also remove it from the queue after the character is retrieved.<br/>
     /// If no one remains in the queue, return (null, 0) instead.</summary>
-    public (AbstractCharacter character, int spd) GetNextCharacter(bool popFromQueue = true){
+    public (AbstractCharacter character, int spd) GetNextTurnFromTurnlist(){
         if (this.turnList == null || this.turnList.Count <= 0) return (null, 0);
         (AbstractCharacter character, int spd) nextChar = this.turnList[0];
-        if (popFromQueue){
-            this.turnList.RemoveAt(0);
-        }
         return nextChar;
+    }
+
+    /// <summary>Returns the next character in the initaitive queue in the tuple (AbstractCharacter character, int spd).<br/>
+    /// Remove the character from the front of the turnlist afterwards.<br/>
+    /// If no one remains in the queue, return (null, 0) instead.</summary>
+    public (AbstractCharacter character, int spd) PopNextTurnFromTurnlist(){
+        if (this.turnList == null || this.turnList.Count <= 0) return (null, 0);
+        (AbstractCharacter character, int spd) nextChar = GetNextTurnFromTurnlist();
+        this.turnList.RemoveAt(0);
+        return nextChar;
+    }
+
+    /// <summary>Find and return the next action of a character in the initaitive queue in the tuple (AbstractCharacter character, int spd).<br/>
+    /// If that character does not have any remaining actions in the queue, return (null, 0) instead.</summary>
+    public (AbstractCharacter character, int spd) GetNextCharacterTurn(AbstractCharacter characterToFind){
+        foreach((AbstractCharacter character, int spd) pair in this.turnList){
+            if (pair.character.Equals(characterToFind)){
+                return pair;
+            }
+        }
+        return (null, 0);
     }
 
     /// <summary>Return true if the character is in the initiative queue, false otherwise.</summary>
