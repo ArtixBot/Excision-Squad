@@ -6,7 +6,8 @@ public enum CharacterFaction {PLAYER, ALLY, NEUTRAL, ENEMY};
 
 public abstract class AbstractCharacter {
     public CharacterFaction CHAR_FACTION;
-    public List<AbstractAbility> abilities;
+    public string CHAR_NAME;
+    public List<AbstractAbility> abilities = new List<AbstractAbility>();
 
     public int actionsPerTurn;
     public int maxHP, curHP;

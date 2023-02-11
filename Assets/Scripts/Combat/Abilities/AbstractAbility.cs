@@ -6,7 +6,7 @@ using UnityEngine;
 
 public enum AbilityType {ATTACK, REACTION, UTILITY};
 
-public abstract class AbstractAbility : IEventListener {
+public abstract class AbstractAbility : IEventObserver {
 
     public string ABILITY_ID;
     public string ABILITY_NAME;
@@ -14,10 +14,10 @@ public abstract class AbstractAbility : IEventListener {
     public AbilityType ABILITY_TYPE;
     public int BASE_COOLDOWN;
 
-    public int curCooldown;
+    public int curCooldown = 0;
 
     // An ability consists of a list of dice and any events (e.g. on hit, on clash, on clash win, on clash lose, etc.) associated with that die.
-    public List<(AbilityDie, List<IEventListener>)> abilityDice = new List<(AbilityDie, List<IEventListener>)>();
+    public List<AbilityDie> abilityDice = new List<AbilityDie>();
 
     public bool IsAvailable(){
         return this.curCooldown <= 0;
