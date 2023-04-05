@@ -14,6 +14,7 @@ public abstract class AbstractAbility : IEventObserver {
     public AbilityType ABILITY_TYPE;
     public int BASE_COOLDOWN;
 
+    public int eventPriority {get {return 1;}}
     public int curCooldown = 0;
 
     // An ability consists of a list of dice and any events (e.g. on hit, on clash, on clash win, on clash lose, etc.) associated with that die.

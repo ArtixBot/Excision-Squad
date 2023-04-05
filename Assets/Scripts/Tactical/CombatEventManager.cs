@@ -20,6 +20,7 @@ public enum CombatEventType {
 }
 
 public interface IEventObserver {
+    int eventPriority {get;}            // Higher values trigger AFTER lower values.
     void HandleEvent(CombatEventData eventData);
 }
 
