@@ -4,19 +4,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum CombatEventType {
-    ON_COMBAT_START,                // On combat start, an IEventObserver must perform all other event subscriptions.
-    ON_COMBAT_END,                  // On combat end, an IEventObserver must unsubscribe from all other events.
-    ON_ROUND_START,
-    ON_ROUND_END,
-    ON_TURN_START,
-    ON_TURN_END,
+    ON_COMBAT_START, ON_COMBAT_END, // On combat start/end, an IEventObserver must subscribe/unsubscribe from all other events.
+    ON_ROUND_START, ON_ROUND_END,
+    ON_TURN_START, ON_TURN_END,
     ON_ABILITY_ACTIVATED,
-    ON_DIE_ROLLED,
-    ON_CLASH,
-    ON_CLASH_WIN,
-    ON_CLASH_TIE,
-    ON_CLASH_LOSS,
-    ON_UNIT_KILLED,
+    ON_UNIT_DEATH, ON_UNIT_DAMAGED,
+    ON_DIE_ROLLED, ON_DIE_HIT,
+    ON_CLASH, ON_CLASH_WIN, ON_CLASH_TIE, ON_CLASH_LOSS,
+    ON_STATUS_APPLIED, ON_STATUS_EXPIRED,
 }
 
 public interface IEventObserver {
@@ -26,31 +21,39 @@ public interface IEventObserver {
 
 // Custom event handler for combat events.
 public static class CombatEventManager {
-    private static Dictionary<CombatEventType, List<IEventObserver>> observers = new Dictionary<CombatEventType, List<IEventObserver>>{
-        {CombatEventType.ON_COMBAT_START, new List<IEventObserver>()},
-        {CombatEventType.ON_COMBAT_END, new List<IEventObserver>()},
-        {CombatEventType.ON_ROUND_START, new List<IEventObserver>()},
-        {CombatEventType.ON_ROUND_END, new List<IEventObserver>()},
-        {CombatEventType.ON_TURN_START, new List<IEventObserver>()},
-        {CombatEventType.ON_TURN_END, new List<IEventObserver>()},
-        {CombatEventType.ON_ABILITY_ACTIVATED, new List<IEventObserver>()},
-        {CombatEventType.ON_DIE_ROLLED, new List<IEventObserver>()},
-        {CombatEventType.ON_CLASH, new List<IEventObserver>()},
-        {CombatEventType.ON_CLASH_WIN, new List<IEventObserver>()},
-        {CombatEventType.ON_CLASH_LOSS, new List<IEventObserver>()},
-        {CombatEventType.ON_UNIT_KILLED, new List<IEventObserver>()},
+    private static Dictionary<CombatEventType, ModdablePriorityQueue<IEventObserver>> observers = new Dictionary<CombatEventType, ModdablePriorityQueue<IEventObserver>>{
+        // Core events
+        {CombatEventType.ON_COMBAT_START, new ModdablePriorityQueue<IEventObserver>()},
+        {CombatEventType.ON_COMBAT_END, new ModdablePriorityQueue<IEventObserver>()},
+        {CombatEventType.ON_ROUND_START, new ModdablePriorityQueue<IEventObserver>()},
+        {CombatEventType.ON_ROUND_END, new ModdablePriorityQueue<IEventObserver>()},
+        {CombatEventType.ON_TURN_START, new ModdablePriorityQueue<IEventObserver>()},
+        {CombatEventType.ON_TURN_END, new ModdablePriorityQueue<IEventObserver>()},
+        // Generic combat events
+        {CombatEventType.ON_ABILITY_ACTIVATED, new ModdablePriorityQueue<IEventObserver>()},
+        {CombatEventType.ON_UNIT_DEATH, new ModdablePriorityQueue<IEventObserver>()},
+        {CombatEventType.ON_UNIT_DAMAGED, new ModdablePriorityQueue<IEventObserver>()},
+        {CombatEventType.ON_STATUS_APPLIED, new ModdablePriorityQueue<IEventObserver>()},
+        {CombatEventType.ON_STATUS_EXPIRED, new ModdablePriorityQueue<IEventObserver>()},
+        // Attack events
+        {CombatEventType.ON_DIE_ROLLED, new ModdablePriorityQueue<IEventObserver>()},
+        {CombatEventType.ON_DIE_HIT, new ModdablePriorityQueue<IEventObserver>()},
+        {CombatEventType.ON_CLASH, new ModdablePriorityQueue<IEventObserver>()},
+        {CombatEventType.ON_CLASH_WIN, new ModdablePriorityQueue<IEventObserver>()},
+        {CombatEventType.ON_CLASH_TIE, new ModdablePriorityQueue<IEventObserver>()},
+        {CombatEventType.ON_CLASH_LOSS, new ModdablePriorityQueue<IEventObserver>()},
     };
 
     public static void AddEventListener(CombatEventType eventType, IEventObserver eventListener){
-        List<IEventObserver> observers = CombatEventManager.observers[eventType];
-        if (!observers.Contains(eventListener)){
-            observers.Add(eventListener);
+        ModdablePriorityQueue<IEventObserver> observers = CombatEventManager.observers[eventType];
+        if (!observers.ContainsItem(eventListener)){
+            observers.AddToQueue(eventListener, eventListener.eventPriority);
         }
     }
 
     public static void RemoveEventListener(CombatEventType eventType, IEventObserver eventListener){
-        List<IEventObserver> observers = CombatEventManager.observers[eventType];
-        observers.Remove(eventListener);
+        ModdablePriorityQueue<IEventObserver> observers = CombatEventManager.observers[eventType];
+        observers.RemoveAllInstancesOfItem(eventListener);
     }
 
     public static void TriggerEvent(CombatEventType eventType, CombatEventData eventData = null){
@@ -154,6 +157,7 @@ public class CombatEventDataTurnStart : CombatEventData{
     public AbstractCharacter character;
 
     public CombatEventDataTurnStart(AbstractCharacter character){
+        this.eventType = CombatEventType.ON_TURN_START;
         this.character = character;
     }
 }
@@ -162,12 +166,14 @@ public class CombatEventDataTurnEnd : CombatEventData{
     public AbstractCharacter character;
 
     public CombatEventDataTurnEnd(AbstractCharacter character){
+        this.eventType = CombatEventType.ON_TURN_END;
         this.character = character;
     }
 }
 
 public class CombatEventDataClashTie : CombatEventData{
     public CombatEventDataClashTie(){
+        this.eventType = CombatEventType.ON_CLASH_TIE;
     }
 }
 

@@ -6,7 +6,7 @@ using UnityEngine;
 /// <summary>
 /// Highly similar to https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.priorityqueue-2?view=net-7.0, but allows for in-queue manipulation.
 /// </summary>
-public class ModdablePriorityQueue<T> {
+public class ModdablePriorityQueue<T> : IEnumerable{
     private List<(T element, int priority)> queue = new List<(T element, int priority)>();
 
     public void Clear(){
@@ -87,5 +87,9 @@ public class ModdablePriorityQueue<T> {
     
     public List<(T element, int priority)> GetTurnList(){
         return this.queue;
+    }
+
+    public IEnumerator GetEnumerator(){
+        return queue.GetEnumerator();
     }
 }
