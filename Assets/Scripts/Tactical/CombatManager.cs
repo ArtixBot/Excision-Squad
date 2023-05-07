@@ -10,6 +10,9 @@ public struct EncounterData {
 public class CombatManager {
     public static readonly CombatManager Instance = new CombatManager();
 
+    public CombatManager(){
+    }
+
     public static Dictionary<CharacterFaction, List<AbstractCharacter>> combatantDict = new Dictionary<CharacterFaction, List<AbstractCharacter>>{
         {CharacterFaction.PLAYER, new List<AbstractCharacter>()},
         {CharacterFaction.ALLY, new List<AbstractCharacter>()},
@@ -28,10 +31,11 @@ public class CombatManager {
         foreach(AbstractCharacter character in fighters){
             combatantDict[character.CHAR_FACTION].Add(character);
         }
-        CombatManager.round = 0;
+        CombatManager.round = 1;
+        // CombatEventManager.combatStart?.Invoke();
     }
 
-    public static void StartRound(){
+    public static void StartRound(int round){
         foreach (CharacterFaction faction in combatantDict.Keys){
             foreach (AbstractCharacter character in combatantDict[faction]){
                 for (int i = 0; i < character.actionsPerTurn; i++){
@@ -43,4 +47,11 @@ public class CombatManager {
         CombatManager.activeChar = initiativeQueue.GetNextItem();
         Debug.Log($"Start Round {CombatManager.round}!");
     }
+
+    // public static void Clash(AbstractAbility attackingAbility, AbstractAbility defendingAbility){
+    // }
+
+    // private static void HandleAbilityActivated(AbstractAbility ability){
+    //     ability.curCooldown = ability.BASE_CD;
+    // }
 }

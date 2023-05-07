@@ -20,7 +20,7 @@ public abstract class AbstractCharacter {
     public bool EquipAbility(AbstractAbility ability){
         if (abilities.Count >= 8) return false;
 
-        ability.ABILITY_OWNER = this;
+        ability.OWNER = this;
         this.abilities.Add(ability);
         return true;
     }

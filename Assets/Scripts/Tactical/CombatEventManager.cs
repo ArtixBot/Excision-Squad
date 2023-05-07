@@ -14,8 +14,31 @@ public enum CombatEventType {
     ON_STATUS_APPLIED, ON_STATUS_EXPIRED,
 }
 
+public interface IEventSubscriber {
+    public int GetPriority();       // Higher values go first in execution order.
+    public void HandleEvent(CombatEventType eventType);
+}
+
 // Custom event handler for combat events.
 public static class CombatEventManager {
-    public delegate void ResolveCombatStart(int round);
-    static ResolveCombatStart del;
+    public static Dictionary<CombatEventType, ModdablePriorityQueue<IEventSubscriber>> events = new Dictionary<CombatEventType, ModdablePriorityQueue<IEventSubscriber>>();
+
+    // Add a subscriber to the event dictionary if it's not already there. If a subscriber is added, return true; otherwise false.
+    public static bool Subscribe(CombatEventType eventType, IEventSubscriber subscriber){
+        if (!events.ContainsKey(eventType)){
+            events.Add(eventType, new ModdablePriorityQueue<IEventSubscriber>());
+        }
+        if (!events[eventType].ContainsItem(subscriber)){
+            events[eventType].AddToQueue(subscriber, subscriber.GetPriority());
+            return true;
+        }
+        return false;
+    }
+
+    // Remove the provided subscriber from all events. Used in instances such as when a character is defeated.
+    public static void RemoveSubscriberFromAllEvents(IEventSubscriber subscriber){
+        foreach (CombatEventType eventType in events.Keys){
+            events[eventType].RemoveAllInstancesOfItem(subscriber);
+        }
+    }
 }
