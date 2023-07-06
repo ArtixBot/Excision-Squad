@@ -9,13 +9,15 @@ public enum AbilityType {ATTACK, REACTION, UTILITY};
 public abstract class AbstractAbility {
 
     public readonly string ID;
-    public readonly string NAME;
-    public readonly string DESC;
+    public string NAME;
+    public string DESC;
     public AbstractCharacter OWNER;
     public AbilityType TYPE;
     public int BASE_CD;
+    public bool IS_GENERIC;         // Characters can't equip more than 4 IS_GENERIC abilities.
+    
     // An ability consists of a list of dice and any events (e.g. on hit, on clash, on clash win, on clash lose, etc.) associated with that die.
-    public List<AbilityDie> BASE_DICE = new List<AbilityDie>();
+    public List<Die> BASE_DICE = new List<Die>();
 
     public AbstractAbility(string ID, string NAME, string DESC, AbilityType TYPE, int BASE_CD){
         this.ID = ID;
@@ -26,8 +28,6 @@ public abstract class AbstractAbility {
     }
 
     public int curCooldown = 0;
-    public List<AbilityDie> activeDice = new List<AbilityDie>();    // When an ability is used, copy over the contents of BASE_DICE into activeDice.
-
     public bool IsAvailable(){
         return this.curCooldown <= 0;
     }
