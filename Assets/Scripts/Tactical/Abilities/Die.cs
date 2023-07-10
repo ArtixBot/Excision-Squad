@@ -6,17 +6,17 @@ public enum DieType {MELEE, RANGED, BLOCK, EVADE, UNIQUE};
 
 /*
     The Die class forms the basis for the entire combat system.
-    Abilities are composed of various amounts of dice, and when activated each die on that ability is rolled, with a corresponding action taken.
-    AbstractDie contains:
+    Abilities are composed of various amounts of dice. When activated, each die is rolled sequentially.
+    Die contains:
         - (optional) dieId
         - DieType
         - ints for the minimum and maximum roll value
 */
 public class Die {
-    public readonly string dieId;
-    public readonly DieType dieType;
-    public readonly int minValue;
-    public readonly int maxValue;
+    public string dieId;
+    public DieType dieType;
+    public int minValue;
+    public int maxValue;
 
     public Die(DieType dieType, int minValue, int maxValue, string dieId = ""){
         this.dieId = dieId;
