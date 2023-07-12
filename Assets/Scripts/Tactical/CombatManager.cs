@@ -6,13 +6,7 @@ public struct EncounterData {
     public List<AbstractCharacter> incomingCombatants;
 }
 
-// Singleton.
-public class CombatManager {
-    public static readonly CombatManager Instance = new CombatManager();
-
-    public CombatManager(){
-    }
-
+public static class CombatManager {
     public static Dictionary<CharacterFaction, List<AbstractCharacter>> combatantDict = new Dictionary<CharacterFaction, List<AbstractCharacter>>{
         {CharacterFaction.PLAYER, new List<AbstractCharacter>()},
         {CharacterFaction.ALLY, new List<AbstractCharacter>()},

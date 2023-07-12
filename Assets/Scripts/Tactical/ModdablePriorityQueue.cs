@@ -84,8 +84,8 @@ public class ModdablePriorityQueue<T> : IEnumerable{
     public void RemoveAllInstancesOfItem(T elementToRemove){
         this.queue.RemoveAll(item => item.Equals(elementToRemove));
     }
-    
-    public List<(T element, int priority)> GetTurnList(){
+
+    public List<(T element, int priority)> GetQueue(){
         return this.queue;
     }
 

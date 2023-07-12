@@ -23,6 +23,17 @@ public abstract class CombatEventData {
     public CombatEventType eventType;
 }
 
+public class CombatEventDieRolled : CombatEventData {
+    public Die die;
+    public int rolledValue;
+
+    public CombatEventDieRolled(Die die, int rolledValue){
+        this.eventType = CombatEventType.ON_DIE_ROLLED;
+        this.die = die;
+        this.rolledValue = rolledValue;
+    }
+}
+
 // Custom event handler for combat events.
 public static class CombatEventManager {
     public static Dictionary<CombatEventType, ModdablePriorityQueue<IEventSubscriber>> events = new Dictionary<CombatEventType, ModdablePriorityQueue<IEventSubscriber>>();
@@ -42,7 +53,7 @@ public static class CombatEventManager {
     // Notify all subscribers of a specified event.
     public static void BroadcastEvent(CombatEventData eventData){
         if (!events.ContainsKey(eventData.eventType)) return;
-        foreach (IEventSubscriber subscriber in events[eventData.eventType]){
+        foreach ((IEventSubscriber subscriber, int _) in events[eventData.eventType].GetQueue()){
             subscriber.HandleEvent(eventData);
         }
     }
