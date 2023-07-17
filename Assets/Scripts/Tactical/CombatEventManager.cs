@@ -23,6 +23,19 @@ public abstract class CombatEventData {
     public CombatEventType eventType;
 }
 
+public class CombatEventAbilityActivated : CombatEventData {
+    public AbstractAbility abilityActivated;
+    public bool isCaster;
+    public bool isDefender;
+
+    public CombatEventAbilityActivated(AbstractAbility abilityActivated, bool isCaster, bool isDefender){
+        this.eventType = CombatEventType.ON_ABILITY_ACTIVATED;
+        this.abilityActivated = abilityActivated;
+        this.isCaster = isCaster;
+        this.isDefender = isDefender;
+    }
+}
+
 public class CombatEventDieRolled : CombatEventData {
     public Die die;
     public int rolledValue;

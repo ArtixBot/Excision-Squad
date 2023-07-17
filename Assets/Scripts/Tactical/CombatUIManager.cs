@@ -6,6 +6,7 @@ public class CombatUIManager : MonoBehaviour
 {
     public Die testAttack;
     public Die testDefense;
+    private GameObject test;
     private GameObject diePrefab;
 
     // Start is called before the first frame update
@@ -13,11 +14,14 @@ public class CombatUIManager : MonoBehaviour
         diePrefab = Resources.Load("Prefabs/Die Prefab") as GameObject;
         testAttack = new Die(DieType.MELEE, 1, 5);
         testDefense = new Die(DieType.BLOCK, 3, 8);
+        test = GameObject.Find("Clash BG");
 
-        GameObject die1 = Instantiate(diePrefab, new Vector3(0, 0, 0), Quaternion.identity);
+        GameObject die1 = Instantiate(diePrefab, new Vector3(-100, 0, 0), Quaternion.identity);
         die1.GetComponent<DiePrefab>().dieData = testAttack;
-        GameObject die2 = Instantiate(diePrefab, new Vector3(1, 0, 0), Quaternion.identity);
+        die1.transform.SetParent(test.transform, false);
+        GameObject die2 = Instantiate(diePrefab, new Vector3(100, 0, 0), Quaternion.identity);
         die2.GetComponent<DiePrefab>().dieData = testDefense;
+        die2.transform.SetParent(test.transform, false);
     }
 
     // // Update is called once per frame

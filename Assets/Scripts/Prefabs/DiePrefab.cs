@@ -10,10 +10,12 @@ public class DiePrefab : MonoBehaviour, IEventSubscriber
     private Die _dieData;
     public Die dieData{
         get => _dieData;
-        set {_dieData = value; this.RenderBackground();}
+        set {_dieData = value; this.InitialRender();}
     } 
-    public SpriteRenderer dieSprite;
-    public TextMeshPro dieNumber;
+    public Image dieBG;
+    public Image dieImage;
+    public TextMeshProUGUI dieNumber;
+    public TextMeshProUGUI dieRange;
 
     void OnEnable(){
         CombatEventManager.Subscribe(CombatEventType.ON_DIE_ROLLED, this);
@@ -23,19 +25,40 @@ public class DiePrefab : MonoBehaviour, IEventSubscriber
         CombatEventManager.UnsubscribeAll(this);
     }
 
-    void RenderBackground(){
-        DieType dieType = dieData.dieType;
-        if (dieType == DieType.MELEE || dieType == DieType.RANGED){
-            dieSprite.sprite = Resources.Load<Sprite>("Images/Attack Die");
-            dieNumber.colorGradientPreset = Resources.Load<TMP_ColorGradient>("Fonts/Attack Gradient");
-        } else if (dieType == DieType.BLOCK || dieType == DieType.EVADE) {
-            dieSprite.sprite = Resources.Load<Sprite>("Images/Defense Die");
-            dieNumber.colorGradientPreset = Resources.Load<TMP_ColorGradient>("Fonts/Defense Gradient");
+    void InitialRender(){
+        dieRange.text = dieData.GetMinValue().ToString() + "-" + dieData.GetMaxValue().ToString();
+
+        switch (dieData.dieType){
+            case DieType.MELEE:
+                dieBG.sprite = Resources.Load<Sprite>("Images/Attack Die");
+                dieImage.sprite = Resources.Load<Sprite>("Images/Melee Die");
+                break;
+            case DieType.RANGED:
+                dieBG.sprite = Resources.Load<Sprite>("Images/Attack Die");
+                dieImage.sprite = Resources.Load<Sprite>("Images/Ranged Die");
+                break;
+            case DieType.BLOCK:
+                dieBG.sprite = Resources.Load<Sprite>("Images/Defense Die");
+                dieImage.sprite = Resources.Load<Sprite>("Images/Block Die");
+                break;
+            case DieType.EVADE:
+                dieBG.sprite = Resources.Load<Sprite>("Images/Defense Die");
+                dieImage.sprite = Resources.Load<Sprite>("Images/Evade Die");
+                break;
+            default:
+                break;
         }
     }
 
-    void RenderText(int nbr){
+    void RenderRoll(int nbr){
+        dieImage.enabled = false;
         dieNumber.text = nbr.ToString();
+        StartCoroutine(DestroySelf());
+    }
+
+    IEnumerator DestroySelf(){
+        yield return new WaitForSecondsRealtime(0.5f);
+        Destroy(gameObject);
     }
 
     // UI elements should update last
@@ -45,7 +68,7 @@ public class DiePrefab : MonoBehaviour, IEventSubscriber
         if (eventData.eventType == CombatEventType.ON_DIE_ROLLED){
             CombatEventDieRolled data = (CombatEventDieRolled) eventData;
             if (data.die == this.dieData){
-                this.RenderText(data.rolledValue);
+                this.RenderRoll(data.rolledValue);
             }
         }
     }
