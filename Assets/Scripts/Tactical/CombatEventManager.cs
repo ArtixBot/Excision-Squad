@@ -19,34 +19,6 @@ public enum CombatEventType {
     ON_STATUS_APPLIED, ON_STATUS_EXPIRED,
 }
 
-public abstract class CombatEventData {
-    public CombatEventType eventType;
-}
-
-public class CombatEventAbilityActivated : CombatEventData {
-    public AbstractAbility abilityActivated;
-    public bool isCaster;
-    public bool isDefender;
-
-    public CombatEventAbilityActivated(AbstractAbility abilityActivated, bool isCaster, bool isDefender){
-        this.eventType = CombatEventType.ON_ABILITY_ACTIVATED;
-        this.abilityActivated = abilityActivated;
-        this.isCaster = isCaster;
-        this.isDefender = isDefender;
-    }
-}
-
-public class CombatEventDieRolled : CombatEventData {
-    public Die die;
-    public int rolledValue;
-
-    public CombatEventDieRolled(Die die, int rolledValue){
-        this.eventType = CombatEventType.ON_DIE_ROLLED;
-        this.die = die;
-        this.rolledValue = rolledValue;
-    }
-}
-
 // Custom event handler for combat events.
 public static class CombatEventManager {
     public static Dictionary<CombatEventType, ModdablePriorityQueue<IEventSubscriber>> events = new Dictionary<CombatEventType, ModdablePriorityQueue<IEventSubscriber>>();
@@ -88,5 +60,63 @@ public static class CombatEventManager {
         foreach (CombatEventType eventType in events.Keys){
             events[eventType].RemoveAllInstancesOfItem(subscriber);
         }
+    }
+}
+
+public abstract class CombatEventData {
+    public CombatEventType eventType;
+}
+
+public class CombatEventCombatStart : CombatEventData {
+    public CombatEventCombatStart(){
+        this.eventType = CombatEventType.ON_COMBAT_START;
+    }
+}
+
+public class CombatEventCombatEnd : CombatEventData {
+    public CombatEventCombatEnd(){
+        this.eventType = CombatEventType.ON_COMBAT_END;
+    }
+}
+
+public class CombatEventRoundStart : CombatEventData {
+    public int roundStartNum;
+
+    public CombatEventRoundStart(int roundStartNum){
+        this.eventType = CombatEventType.ON_ROUND_START;
+        this.roundStartNum = roundStartNum;
+    }
+}
+
+public class CombatEventRoundEnd : CombatEventData {
+    public int roundEndNum;
+
+    public CombatEventRoundEnd(int roundEndNum){
+        this.eventType = CombatEventType.ON_ROUND_START;
+        this.roundEndNum = roundEndNum;
+    }
+}
+
+public class CombatEventAbilityActivated : CombatEventData {
+    public AbstractAbility abilityActivated;
+    public bool isCaster;
+    public bool isDefender;
+
+    public CombatEventAbilityActivated(AbstractAbility abilityActivated, bool isCaster, bool isDefender){
+        this.eventType = CombatEventType.ON_ABILITY_ACTIVATED;
+        this.abilityActivated = abilityActivated;
+        this.isCaster = isCaster;
+        this.isDefender = isDefender;
+    }
+}
+
+public class CombatEventDieRolled : CombatEventData {
+    public Die die;
+    public int rolledValue;
+
+    public CombatEventDieRolled(Die die, int rolledValue){
+        this.eventType = CombatEventType.ON_DIE_ROLLED;
+        this.die = die;
+        this.rolledValue = rolledValue;
     }
 }

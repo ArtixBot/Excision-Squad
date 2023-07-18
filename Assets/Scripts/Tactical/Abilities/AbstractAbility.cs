@@ -19,7 +19,7 @@ public abstract class AbstractAbility : IEventSubscriber {
     public int MAX_RANGE;
     
     // An attack/reaction consists of a list of dice and any events (e.g. on hit, on clash, on clash win, on clash lose, etc.) associated with that die.
-    // On attack/reaction activation, copy the list of BASE_DICE to CombatManager's attacer/defender dice queue.
+    // On attack/reaction activation, copy the list of BASE_DICE to CombatManager's attacker/defender dice queue.
     public List<Die> BASE_DICE = new List<Die>();
 
     public int curCooldown = 0;

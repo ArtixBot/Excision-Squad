@@ -53,7 +53,7 @@ public class DiePrefab : MonoBehaviour, IEventSubscriber
     void RenderRoll(int nbr){
         dieImage.enabled = false;
         dieNumber.text = nbr.ToString();
-        StartCoroutine(DestroySelf());
+        // StartCoroutine(DestroySelf());       // TODO: Uncomment this.
     }
 
     IEnumerator DestroySelf(){
