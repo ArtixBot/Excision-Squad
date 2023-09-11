@@ -9,7 +9,7 @@ public class TestCharacter : AbstractCharacter
         this.CHAR_NAME = "Test Character";
         this.actionsPerTurn = 2;
         this.maxHP = this.curHP = 20;
-        (this.minSpd, this.maxSpd, this.spdMod) = (2, 5, 0);
+        (this.minSpd, this.maxSpd) = (2, 5);
         this.curPos = 0;
         this.maxPoise = this.curPoise = 20;
     }

@@ -8,11 +8,11 @@ public abstract class AbstractCharacter {
     public CharacterFaction CHAR_FACTION;
     public string CHAR_NAME;
 
-    protected List<AbstractAbility> abilities = new List<AbstractAbility>();       // At the start of combat, deep-copy everything from PERMA_ABILITIES.
+    public List<AbstractAbility> abilities = new List<AbstractAbility>();       // At the start of combat, deep-copy everything from PERMA_ABILITIES.
 
     public int actionsPerTurn;
     public int maxHP, curHP;
-    public int minSpd, maxSpd, spdMod;
+    public int minSpd, maxSpd;      // Speed modifiers like Haste or Slow are done in event handling.
     public int curPos;
     public int maxPoise, curPoise;
 
@@ -37,7 +37,7 @@ public abstract class AbstractCharacter {
     public int CountAvailableAbilities(){
         int cnt = 0;
         foreach (AbstractAbility ability in abilities){
-            if (ability.IsAvailable()) cnt++;
+            if (ability.isAvailable) cnt++;
         }
         return cnt;
     }
@@ -45,7 +45,7 @@ public abstract class AbstractCharacter {
     public int CountUnavailableAbilities(){
         int cnt = 0;
         foreach (AbstractAbility ability in abilities){
-            if (ability.IsUnavailable()) cnt++;
+            if (!ability.isAvailable) cnt++;
         }
         return cnt;
     }

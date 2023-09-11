@@ -32,16 +32,19 @@ public class CombatUIManager : MonoBehaviour
         ability1.GetComponent<AbilityClashPrefab>().abilityData = basicAbility;
         ability1.transform.SetParent(GameObject.Find("Clash Overlay").transform, false);
 
-        CombatManager.combatState = CombatState.COMBAT_START;
+        // CombatManager.combatState = CombatState.COMBAT_START;
+
+        CombatManager.combatData = new CombatInstance();
+        CombatManager.ChangeCombatState(CombatState.COMBAT_START);
     }
 
     // // Update is called once per frame
     void Update() {
         if (Input.GetKeyUp(KeyCode.E)){
             int valA = testAttack.Roll();
-            CombatEventManager.BroadcastEvent(new CombatEventDieRolled(testAttack, valA));
+            // CombatEventManager.BroadcastEvent(new CombatEventDieRolled(testAttack, valA));
             int valD = testDefense.Roll();
-            CombatEventManager.BroadcastEvent(new CombatEventDieRolled(testDefense, valD));
+            // CombatEventManager.BroadcastEvent(new CombatEventDieRolled(testDefense, valD));
         }
     }
 }

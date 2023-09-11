@@ -18,11 +18,11 @@ public class DiePrefab : MonoBehaviour, IEventSubscriber
     public TextMeshProUGUI dieRange;
 
     void OnEnable(){
-        CombatEventManager.Subscribe(CombatEventType.ON_DIE_ROLLED, this);
+        // CombatEventManager.Subscribe(CombatEventType.ON_DIE_ROLLED, this);
     }
 
     void OnDestroy(){
-        CombatEventManager.UnsubscribeAll(this);
+        // CombatEventManager.UnsubscribeAll(this);
     }
 
     void InitialRender(){
