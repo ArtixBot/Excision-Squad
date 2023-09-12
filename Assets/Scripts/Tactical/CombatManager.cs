@@ -6,6 +6,7 @@ using UnityEngine;
 using Random = UnityEngine.Random;
 
 public enum CombatState {
+    NULL,       // Default state.
     COMBAT_START, COMBAT_END,
     ROUND_START, ROUND_END,
     TURN_START, TURN_END,
@@ -33,7 +34,7 @@ public class CombatInstance {
 
     public CombatInstance(){
         round = 1;
-        combatState = CombatState.COMBAT_START;
+        combatState = CombatState.NULL;
         combatEvents = new CombatEventManager();
     }
 
@@ -82,6 +83,7 @@ public static class CombatManager {
             case CombatState.AWAITING_CLASH_INPUT:      // This state doesn't do anything by itself, but allows use of InputClashReaction while at this stage.
                 break;
             case CombatState.RESOLVE_ABILITIES:         // Triggers after AWAITING_ABILITY_INPUT, or (optionally) AWAITING_CLASH_INPUT.
+                ResolveAbilities();
                 break;
             default:
                 break;
@@ -135,6 +137,7 @@ public static class CombatManager {
     }
 
     // Input abilities which are unit-targeted.
+    // Note that this is a public function so that the UI can call this.
     public static void InputAbility(AbstractAbility ability, List<AbstractCharacter> targets){
         // Don't do anything if not in AWAITING_ABILITY_INPUT stage, or if no targets were selected.
         if (combatData.combatState != CombatState.AWAITING_ABILITY_INPUT || targets.Count == 0){
@@ -144,11 +147,10 @@ public static class CombatManager {
         combatData.activeAbilityDice = ability.BASE_DICE;
         combatData.activeAbilityTargets = targets;
 
-        eventManager.BroadcastEvent(new CombatEventAbilityActivated(combatData.activeChar.character, ability, ability.BASE_DICE, targets));
         if (ability.TYPE == AbilityType.ATTACK &&
             !ability.HasTag(AbilityTag.AOE) && !ability.HasTag(AbilityTag.DEVIOUS) &&
             combatData.turnlist.ContainsItem(targets[0]) &&
-            CheckForEligibleReactions().Count > 0) {
+            GetEligibleReactions().Count > 0) {
             // If the ability in question is a single-target non-DEVIOUS attack, the defender has a remaining action, and the defender has eligible reactions, change to AWAITING_CLASH_INPUT.
             ChangeCombatState(CombatState.AWAITING_CLASH_INPUT);
         } else {
@@ -157,14 +159,98 @@ public static class CombatManager {
     }
 
     // Input abilities which are lane-targeted.
+    // Note that this is a public function so that the UI can call this.
     public static void InputAbility(AbstractAbility ability, List<int> lanes){
-        // Don't do anything if not in AWAITING_ABILITY_INPUT stage, or if no targets were selected.
+        // Don't do anything if not in AWAITING_ABILITY_INPUT stage.
         if (combatData.combatState != CombatState.AWAITING_ABILITY_INPUT){
             return;
         }
+        combatData.activeAbility = ability;
+        combatData.activeAbilityDice = ability.BASE_DICE;
+        combatData.activeAbilityTargets = new List<AbstractCharacter>();
+
+        foreach (CharacterFaction faction in combatData.fighters.Keys){
+            foreach (AbstractCharacter character in combatData.fighters[faction]){
+                if (lanes.Contains(character.curPos)) {
+                    combatData.activeAbilityTargets.Add(character);
+                }
+            }
+        }
+        // Lane-targeted abilities by default are either AoE attack abilities or utility abilities, so no need for clash check.
+        ChangeCombatState(CombatState.RESOLVE_ABILITIES);
+    }
+
+    // Input reaction ability (assuming one is selected).
+    // Note that this is a public function so that the UI can call this.
+    public static void InputReaction(AbstractAbility ability){
+        if (ability != null){
+            combatData.reactAbility = ability;
+            combatData.reactAbilityDice = ability.BASE_DICE;
+        }
+        ChangeCombatState(CombatState.RESOLVE_ABILITIES);
+    }
+
+    private static void ResolveAbilities(){
+        if (combatData.reactAbility == null){
+            // No clash occurs.
+            ResolveUnopposedAbility();
+        }
+        if (combatData.reactAbility != null){
+            // Clash occurs!
+            ResolveClash();
+        }
+        // If the active ability had Cantrip, don't end turn and instead return to AWAITING_ABILITY_INPUT.
+        CombatState nextState = combatData.activeAbility.HasTag(AbilityTag.CANTRIP) ? CombatState.AWAITING_ABILITY_INPUT : CombatState.TURN_END;
+        
+        // Cleanup abilities after activation.
+        combatData.activeAbility = null;
+        combatData.reactAbility = null;
+        ChangeCombatState(nextState);
+    }
+
+    private static void ResolveUnopposedAbility(){
+        eventManager.BroadcastEvent(new CombatEventAbilityActivated(combatData.activeChar.character, combatData.activeAbility, ref combatData.activeAbilityDice, combatData.activeAbilityTargets));
+        foreach (Die die in combatData.activeAbilityDice){
+            int roll = die.Roll();
+            eventManager.BroadcastEvent(new CombatEventDieRolled(die, ref roll));
+            roll = Math.Max(0, roll);       // After all die-modifying events trigger, ensure the roll is not negative.
+
+            if (die.dieType == DieType.MELEE || die.dieType == DieType.RANGED){
+                foreach (AbstractCharacter target in combatData.activeAbilityTargets){
+                    int expectedHPDamage = roll;
+                    int expectedPoiseDamage = roll;
+                    eventManager.BroadcastEvent(new CombatEventPreHit(combatData.activeChar.character, die, ref expectedHPDamage, false, target));
+                    eventManager.BroadcastEvent(new CombatEventPreHit(combatData.activeChar.character, die, ref expectedPoiseDamage, true, target));
+
+                    if (expectedHPDamage > 0){
+                        target.curHP -= expectedHPDamage;
+                        // TODO: How to handle damage? Event handling where CombatManager is a subscriber? Or just doing the math here? Or something else?
+                        if (target.curHP < 0){
+                        }
+                    }
+                    if (expectedPoiseDamage > 0){
+                        target.curPoise -= expectedPoiseDamage;
+                        if (target.curPoise < 0){
+                        }
+                    }
+                }
+            }
+        }
+        return;
+    }
+
+    private static void ResolveClash(){
+        eventManager.BroadcastEvent(new CombatEventAbilityActivated(combatData.activeChar.character, combatData.activeAbility, ref combatData.activeAbilityDice, combatData.activeAbilityTargets[0]));
+        eventManager.BroadcastEvent(new CombatEventAbilityActivated(combatData.activeAbilityTargets[0], combatData.reactAbility, ref combatData.reactAbilityDice, combatData.activeChar.character));
+        eventManager.BroadcastEvent(new CombatEventClashOccurs(combatData.activeChar.character, 
+                                                               combatData.activeAbility, 
+                                                               ref combatData.activeAbilityDice, 
+                                                               combatData.activeAbilityTargets[0], 
+                                                               combatData.reactAbility, 
+                                                               ref combatData.reactAbilityDice));
     }
     
-    private static List<AbstractAbility> CheckForEligibleReactions(){
+    private static List<AbstractAbility> GetEligibleReactions(){
         int atkLane = combatData.activeChar.character.curPos;
         AbstractCharacter defender = combatData.activeAbilityTargets[0];
         int defLane = defender.curPos;
@@ -177,8 +263,8 @@ public static class CombatManager {
             if (ability.TYPE == AbilityType.REACTION){
                 availableReactionAbilties.Add(ability);
             }
-            // Available attacks are eligible *if* the attacker is in range of the defender's attack.
-            if (ability.TYPE == AbilityType.ATTACK){
+            // Available single-target attacks are eligible *if* the attacker is in range of the defender's attack.
+            if (ability.TYPE == AbilityType.ATTACK && !ability.HasTag(AbilityTag.AOE)){
                 int range = Math.Abs(atkLane - defLane);
                 if (range >= ability.MIN_RANGE && range <= ability.MAX_RANGE) availableReactionAbilties.Add(ability);
             }

@@ -14,7 +14,7 @@ public enum CombatEventType {
     ON_TURN_START, ON_TURN_END,
     ON_ABILITY_ACTIVATED,
     ON_UNIT_DEATH, ON_UNIT_DAMAGED,
-    ON_DIE_ROLLED, ON_HIT,
+    ON_DIE_ROLLED, ON_PRE_HIT,
     ON_CLASH_ELIGIBLE, ON_CLASH, ON_CLASH_WIN, ON_CLASH_TIE, ON_CLASH_LOSS,
     ON_STATUS_APPLIED, ON_STATUS_EXPIRED,
 }
@@ -124,7 +124,7 @@ public class CombatEventAbilityActivated : CombatEventData {
     public AbstractCharacter target;
     public List<AbstractCharacter> targets = new List<AbstractCharacter>();
 
-    public CombatEventAbilityActivated(AbstractCharacter caster, AbstractAbility abilityActivated, List<Die> abilityDice, AbstractCharacter target){
+    public CombatEventAbilityActivated(AbstractCharacter caster, AbstractAbility abilityActivated, ref List<Die> abilityDice, AbstractCharacter target){
         this.eventType = CombatEventType.ON_ABILITY_ACTIVATED;
         this.abilityActivated = abilityActivated;
         this.abilityDice = abilityDice;
@@ -132,7 +132,7 @@ public class CombatEventAbilityActivated : CombatEventData {
         this.target = target;
     }
     
-    public CombatEventAbilityActivated(AbstractCharacter caster, AbstractAbility abilityActivated, List<Die> abilityDice, List<AbstractCharacter> targets){
+    public CombatEventAbilityActivated(AbstractCharacter caster, AbstractAbility abilityActivated, ref List<Die> abilityDice, List<AbstractCharacter> targets){
         this.eventType = CombatEventType.ON_ABILITY_ACTIVATED;
         this.abilityActivated = abilityActivated;
         this.abilityDice = abilityDice;
@@ -145,7 +145,7 @@ public class CombatEventDieRolled : CombatEventData {
     public Die die;
     public int rolledValue;
 
-    public CombatEventDieRolled(Die die, int rolledValue){
+    public CombatEventDieRolled(Die die, ref int rolledValue){
         this.eventType = CombatEventType.ON_DIE_ROLLED;
         this.die = die;
         this.rolledValue = rolledValue;
@@ -157,11 +157,56 @@ public class CombatEventClashEligible : CombatEventData {
     public List<AbstractAbility> reacterEligibleAbilties;
     public AbstractCharacter attacker;
 
-    ///<summary>Notify subscribers that a clash is eligible. This is relevant for UI subscribers.</summary>
+    ///<summary>Notify subscribers that a clash may occur.</summary>
     public CombatEventClashEligible(AbstractCharacter reacter, List<AbstractAbility> reacterEligibleAbilties, AbstractCharacter attacker){
         this.eventType = CombatEventType.ON_CLASH_ELIGIBLE;
         this.reacter = reacter;
         this.reacterEligibleAbilties = reacterEligibleAbilties;
         this.attacker = attacker;
+    }
+}
+
+public class CombatEventClashOccurs : CombatEventData {
+    public AbstractCharacter attacker;
+    public AbstractAbility attackerAbility;
+    public List<Die> attackerDice;
+
+    public AbstractCharacter reacter;
+    public AbstractAbility reacterAbility;
+    public List<Die> reacterDice;
+
+    ///<summary>Notify subscribers that a clash is occurring.</summary>
+    public CombatEventClashOccurs(AbstractCharacter attacker, AbstractAbility attackerAbility, ref List<Die> attackerDice, AbstractCharacter reacter, AbstractAbility reacterAbility, ref List<Die> reacterDice){
+        this.eventType = CombatEventType.ON_CLASH;
+        this.attacker = attacker;
+        this.attackerAbility = attackerAbility;
+        this.attackerDice = attackerDice;
+
+        this.reacter = reacter;
+        this.reacterAbility = reacterAbility;
+        this.reacterDice = reacterDice;
+    }
+}
+
+public class CombatEventPreHit : CombatEventData {
+    public AbstractCharacter attacker;
+    public Die die;
+    private int _damage;
+    public int damage {
+        get {return _damage;}
+        set {_damage = damageCanBeFurtherModified ? value : _damage;}
+    }
+    public bool isPoiseDamage;
+    public bool damageCanBeFurtherModified = true;      // Defaults to true, but can be false if the die in question is a restrained die.
+    public AbstractCharacter target;
+
+    ///<summary>Notify subscribers that a hit will occur (but the hit has not occurred yet).</summary>
+    public CombatEventPreHit(AbstractCharacter attacker, Die die, ref int damage, bool isPoiseDamage, AbstractCharacter target){
+        this.eventType = CombatEventType.ON_PRE_HIT;
+        this.attacker = attacker;
+        this.die = die;
+        this.damage = damage;
+        this.isPoiseDamage = isPoiseDamage;
+        this.target = target;
     }
 }

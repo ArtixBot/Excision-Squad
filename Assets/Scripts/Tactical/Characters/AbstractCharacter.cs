@@ -18,6 +18,7 @@ public abstract class AbstractCharacter {
 
     // Add an ability to the character's list of equipped abilities.
     // Returns true if successful, otherwise false.
+    // TODO: Move default character ability equip limits to UI logic instead? We might have in-combat granted abilities and this wouldn't work well with that.
     public bool EquipAbility(AbstractAbility ability){
         if (this.abilities.Count >= 8) return false;
         // Cannot equip more than 4 generic abilities at any given time.
